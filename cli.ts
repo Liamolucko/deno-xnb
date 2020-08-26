@@ -3,9 +3,9 @@ import { walkSync } from "https://deno.land/std@0.65.0/fs/walk.ts";
 import { bold, green, red } from "https://deno.land/std@0.66.0/fmt/colors.ts";
 import * as fs from "https://deno.land/std@0.66.0/fs/mod.ts";
 import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
-import Log from './app/Log.ts';
-import { exportFile, resolveImports } from "./app/Porter.ts";
-import Xnb from "./app/Xnb/index.js";
+import Log from "./src/Log.ts";
+import { exportFile, resolveImports } from "./src/Porter.ts";
+import Xnb from "./src/Xnb.ts";
 
 // used for displaying the tally of success and fail
 let success = 0;
@@ -50,12 +50,7 @@ program
 program.action(() => program.help());
 
 // parse the input and run the commander program
-program.parse(process.argv);
-
-// show help if we didn't specify any valid input
-if (!Deno.args.slice(2).length) {
-  program.help();
-}
+program.parse(Deno.args);
 
 /**
  * Display the results of the processing
@@ -68,8 +63,6 @@ function details() {
 
 /**
  * Takes input and processes input for unpacking.
- * @param {String} input
- * @param {String} output
  */
 function processUnpack(input: string, output: string) {
   // catch any exceptions to keep a batch of files moving
@@ -85,7 +78,7 @@ function processUnpack(input: string, output: string) {
     // load the XNB and get the object from it
     const result = xnb.load(input);
 
-    // save the file
+    // @ts-ignore save the file
     if (!exportFile(output, result)) {
       Log.error(`File ${output} failed to save!`);
       return fail++;
@@ -106,9 +99,6 @@ function processUnpack(input: string, output: string) {
 
 /**
  * Process the pack of files to xnb
- * @param {String} input
- * @param {String} output
- * @param {Function} done
  */
 function processPack(input: string, output: string) {
   try {
@@ -128,7 +118,7 @@ function processPack(input: string, output: string) {
     const buffer = xnb.convert(json);
 
     // write the buffer to the output
-    Deno.writeFileSync(output, buffer);
+    Deno.writeFileSync(output, buffer!);
 
     // log that the file was saved
     Log.info(`Output file saved: ${output}`);
@@ -145,10 +135,6 @@ function processPack(input: string, output: string) {
 
 /**
  * Used to walk a path with input/output for processing
- * @param {Function} fn
- * @param {String} input
- * @param {String} output
- * @param {Function} cb
  */
 function processFiles(
   fn: Function,

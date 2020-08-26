@@ -1,3 +1,5 @@
+This is a Deno port of [LeonBlade/xnbcli](https://github.com/LeonBlade/xnbcli). Information about the original is below.
+
 # xnbcli
 
 [![Build Status](https://travis-ci.org/LeonBlade/xnbcli.svg?branch=master)](https://travis-ci.org/LeonBlade/xnbcli)
