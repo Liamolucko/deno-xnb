@@ -35,7 +35,7 @@ const helloWorld = xnb.pack({
 console.log(xnb.unpack(helloWorld).content); // Hello, World!
 ```
 
-## Original README
+# Original README
 
 A CLI tool for XNB packing/unpacking purpose built for Stardew Valley.
 
