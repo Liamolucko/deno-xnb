@@ -1,26 +1,23 @@
-import BaseReader from './BaseReader.ts';
-import BufferReader from '../../BufferReader.ts';
-import SingleReader from './SingleReader.ts';
+import BaseReader from "./BaseReader.ts";
+import BufferReader from "../../BufferReader.ts";
+import SingleReader from "./SingleReader.ts";
 
-/**
- * Vector2 Reader
- * @class
- * @extends BaseReader
- */
-class Vector2Reader extends BaseReader {
-    /**
-     * Reads Vector2 from buffer.
-     * @param {BufferReader} buffer
-     * @returns {object}
-     */
-    read(buffer: BufferReader): object {
-        const singleReader = new SingleReader();
+export interface Vector2 {
+  x: number;
+  y: number;
+}
 
-        let x = singleReader.read(buffer);
-        let y = singleReader.read(buffer);
+/** Vector2 Reader */
+class Vector2Reader extends BaseReader<Vector2> {
+  /** Reads Vector2 from buffer. */
+  read(buffer: BufferReader): Vector2 {
+    const singleReader = new SingleReader();
 
-        return { x, y };
-    }
+    let x = singleReader.read(buffer);
+    let y = singleReader.read(buffer);
+
+    return { x, y };
+  }
 }
 
 export default Vector2Reader;

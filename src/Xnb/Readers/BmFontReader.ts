@@ -4,29 +4,16 @@ import ReaderResolver from "../ReaderResolver.ts";
 import BaseReader from "./BaseReader.ts";
 import StringReader from "./StringReader.ts";
 
-/**
- * BmFont Reader
- * @class
- * @extends BaseReader
- */
+/** BmFont Reader */
 class BmFontReader extends BaseReader {
-  /**
-     * Reads BmFont from buffer.
-     * @param {BufferReader} buffer
-     * @returns {Object}
-     */
+  /** Reads BmFont from buffer. */
   read(buffer: BufferReader): { export: { type: string; data: string } } {
     const stringReader = new StringReader();
     const xml = stringReader.read(buffer);
     return { export: { type: this.type, data: xml } };
   }
 
-  /**
-     * Writes BmFont into buffer
-     * @param {BufferWriter} buffer
-     * @param {Mixed} data
-     * @param {ReaderResolver}
-     */
+  /** Writes BmFont into buffer. */
   write(
     buffer: BufferWriter,
     content: { data: string },

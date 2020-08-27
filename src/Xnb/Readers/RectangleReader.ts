@@ -4,18 +4,17 @@ import Int32Reader from "./Int32Reader.ts";
 import BufferWriter from "../../BufferWriter.ts";
 import ReaderResolver from "../ReaderResolver.ts";
 
-/**
- * Rectangle Reader
- * @class
- * @extends BaseReader
- */
-class RectangleReader extends BaseReader {
-  /**
-     * Reads Rectangle from buffer.
-     * @param {BufferReader} buffer
-     * @returns {object}
-     */
-  read(buffer: BufferReader): object {
+export interface Rectangle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** Rectangle Reader */
+class RectangleReader extends BaseReader<Rectangle> {
+  /** Reads Rectangle from buffer. */
+  read(buffer: BufferReader): Rectangle {
     const int32Reader = new Int32Reader();
 
     const x = int32Reader.read(buffer);
@@ -27,14 +26,14 @@ class RectangleReader extends BaseReader {
   }
 
   /**
-     * Writes Effects into the buffer
-     * @param {BufferWriter} buffer
-     * @param {Mixed} data The data
-     * @param {ReaderResolver} resolver
-     */
+   * Writes Effects into the buffer
+   * @param buffer
+   * @param data The data
+   * @param resolver
+   */
   write(
     buffer: BufferWriter,
-    content: { x: number; y: number; width: number; height: number },
+    content: Rectangle,
     resolver: ReaderResolver,
   ) {
     this.writeIndex(buffer, resolver);

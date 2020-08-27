@@ -1,8 +1,41 @@
-This is a Deno port of [LeonBlade/xnbcli](https://github.com/LeonBlade/xnbcli). Information about the original is below.
-
 # xnbcli
 
-[![Build Status](https://travis-ci.org/LeonBlade/xnbcli.svg?branch=master)](https://travis-ci.org/LeonBlade/xnbcli)
+This is a Deno port of [LeonBlade/xnbcli](https://github.com/LeonBlade/xnbcli).
+
+It's now usable as a module, and is also (in theory) now browser-compatible.
+
+## CLI
+### Requirements
+- [Deno](https://deno.land/)
+
+### Installation
+`deno install --unstable --allow-read --allow-write --allow-env https://denopkg.com/Liamolucko/xnbcli/cli.ts`
+
+### Usage
+`xnbcli (pack|unpack) [input] [output]`
+
+## Module
+```typescript
+import * as xnb from "https://denopkg.com/Liamolucko/xnbcli/mod.ts";
+
+const helloWorld = xnb.pack({
+  header: {
+    target: "w",
+    hidef: true,
+    formatVersion: 5,
+    compressed: true,
+  },
+  readers: [{
+    type: "Microsoft.Xna.Framework.Content.StringReader",
+    version: 0,
+  }],
+  content: "Hello, World!",
+});
+
+console.log(xnb.unpack(helloWorld).content); // Hello, World!
+```
+
+## Original README
 
 A CLI tool for XNB packing/unpacking purpose built for Stardew Valley.
 

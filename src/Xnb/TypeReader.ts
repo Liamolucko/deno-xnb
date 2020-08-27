@@ -6,8 +6,8 @@ import { BaseReader } from "./Readers.ts";
 /**
  * Used to simplify type from XNB file.
  * @function simplifyType
- * @param  {String} type The long verbose type read from XNB file.
- * @returns {String} returns shorthand simplified type for use within this tool.
+ * @param  type The long verbose type read from XNB file.
+ * @returns returns shorthand simplified type for use within this tool.
  */
 export function simplifyType(type: string): string {
   // gets the first part of the type
@@ -122,13 +122,13 @@ export function simplifyType(type: string): string {
         `Non-implemented type found, cannot resolve type "${simple}", "${type}".`,
       );
   }
-};
+} 
 
 /**
  * Parses subtypes from a type like Dictionary or List
  * @function parseSubtypes
- * @param  {String} type The type to parse with subtypes in.
- * @returns {String[]} returns an array of subtypes
+ * @param  type The type to parse with subtypes in.
+ * @returns returns an array of subtypes
  */
 export function parseSubtypes(type: string): string[] {
   // split the string by the ` after the type
@@ -148,12 +148,12 @@ export function parseSubtypes(type: string): string[] {
 
   // return the matches
   return matches;
-};
+}
 
 /**
  * Get type info from simple type
- * @param   {String} type Simple type to get info from.
- * @returns {Object} returns an object containing information about the type.
+ * @param type Simple type to get info from.
+ * @returns An object containing information about the type.
  */
 export function getTypeInfo(
   type: string,
@@ -168,13 +168,12 @@ export function getTypeInfo(
 
   // return info object
   return { type: mainType, subtypes };
-};
+}
 
 /**
  * Gets an XnbReader instance based on type.
- * @function getReader
- * @param {String} type The simplified type to get reader based off of.
- * @returns {BaseReader} returns an instance of BaseReader for given type.
+ * @param type The simplified type to get reader based off of.
+ * @returns An instance of BaseReader for given type.
  */
 export function getReader(type: string): BaseReader {
   // get type info for complex types
@@ -183,7 +182,7 @@ export function getReader(type: string): BaseReader {
   const subtypes = info.subtypes.map(getReader);
 
   // @ts-ignore if we have a reader then use one
-  if (typeof Readers[`${info.type}Reader`] !== 'undefined') {
+  if (typeof Readers[`${info.type}Reader`] !== "undefined") {
     // @ts-ignore
     return new (Readers[`${info.type}Reader`])(
       subtypes[0],

@@ -4,11 +4,7 @@ import BufferWriter from "../../BufferWriter.ts";
 import UInt32Reader from "./UInt32Reader.ts";
 import ReaderResolver from "../ReaderResolver.ts";
 
-/**
- * Effect Reader
- * @class
- * @extends BaseReader
- */
+/** Effect Reader */
 class EffectReader extends BaseReader {
   read(buffer: BufferReader) {
     const uint32Reader = new UInt32Reader();
@@ -20,11 +16,11 @@ class EffectReader extends BaseReader {
   }
 
   /**
-     * Writes Effects into the buffer
-     * @param {BufferWriter} buffer
-     * @param {Mixed} data The data
-     * @param {ReaderResolver} resolver
-     */
+   * Writes Effects into the buffer
+   * @param buffer
+   * @param data The data
+   * @param resolver
+   */
   write(
     buffer: BufferWriter,
     content: { data: Uint8Array },

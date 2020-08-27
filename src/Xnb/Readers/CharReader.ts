@@ -3,28 +3,15 @@ import BufferWriter from "../../BufferWriter.ts";
 import ReaderResolver from "../ReaderResolver.ts";
 import BaseReader from "./BaseReader.ts";
 
-/**
- * Char Reader
- * @class
- * @extends BaseReader
- */
-class CharReader extends BaseReader {
-  /**
-     * Reads Char from the buffer.
-     * @param {BufferReader} buffer
-     * @returns {String}
-     */
+/** Char Reader */
+class CharReader extends BaseReader<string> {
+  /** Reads Char from the buffer. */
   read(buffer: BufferReader): string {
     let charSize = this._getCharSize(buffer.peekInt());
     return new TextDecoder().decode(buffer.read(charSize));
   }
 
-  /**
-     * Writes Char into buffer
-     * @param {BufferWriter} buffer
-     * @param {Mixed} data
-     * @param {ReaderResolver}
-     */
+  /** Writes Char into buffer */
   write(
     buffer: BufferWriter,
     content: string,
@@ -38,11 +25,7 @@ class CharReader extends BaseReader {
     buffer.concat(_buf.slice(0, size));
   }
 
-  /**
-     * Gets size of char for some special characters that are more than one byte.
-     * @param {Number} byte
-     * @returns {Number}
-     */
+  /** Gets size of char for some special characters that are more than one byte. */
   _getCharSize(byte: number): number {
     return ((0xE5000000 >> ((byte >> 3) & 0x1e)) & 3) + 1;
   }

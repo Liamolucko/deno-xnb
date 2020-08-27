@@ -4,6 +4,7 @@ import Log from "./Log.ts";
 import XnbError from "./XnbError.ts";
 // @deno-types="./upng.d.ts"
 import UPNG from "https://cdn.skypack.dev/upng-js";
+import { XnbJson } from "./Xnb.ts";
 
 // I think this is what the original was trying to do, but I'm not sure.
 function getNestedValue(obj: Record<string, any>, keys: string[]): any | null {
@@ -119,7 +120,7 @@ export function exportFile(
 }
 
 /** Resolves all exported content back into the object */
-export function resolveImports(filename: string): object {
+export function resolveImports(filename: string): XnbJson {
   // get the directory name
   const dirname = path.dirname(filename);
   // get the basename for the file

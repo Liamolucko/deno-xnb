@@ -4,26 +4,20 @@ import ReaderResolver from "../ReaderResolver.ts";
 import BaseReader from "./BaseReader.ts";
 import UInt32Reader from "./UInt32Reader.ts";
 
-/**
- * List Reader
- * @class
- * @extends BaseReader
- */
-class ListReader extends BaseReader {
-  reader: BaseReader;
-  constructor(reader: BaseReader) {
+/** List Reader */
+class ListReader<T = any> extends BaseReader<T[]> {
+  reader: BaseReader<T>;
+  constructor(reader: BaseReader<T>) {
     super();
-    /** @type {BaseReader} */
     this.reader = reader;
   }
 
   /**
-     * Reads List from buffer.
-     * @param {BufferReader} buffer
-     * @param {ReaderResolver} resolver
-     * @returns {Array}
-     */
-  read(buffer: BufferReader, resolver: ReaderResolver): Array<any> {
+   * Reads List from buffer.
+   * @param buffer
+   * @param resolver
+   */
+  read(buffer: BufferReader, resolver: ReaderResolver): T[] {
     const uint32Reader = new UInt32Reader();
     const size = uint32Reader.read(buffer);
 
@@ -38,12 +32,16 @@ class ListReader extends BaseReader {
   }
 
   /**
-     * Writes List into the buffer
-     * @param {BufferWriter} buffer
-     * @param {Mixed} data The data
-     * @param {ReaderResolver} resolver
-     */
-  write(buffer: BufferWriter, content: any[], resolver?: ReaderResolver | null) {
+   * Writes List into the buffer
+   * @param buffer
+   * @param data The data
+   * @param resolver
+   */
+  write(
+    buffer: BufferWriter,
+    content: T[],
+    resolver?: ReaderResolver | null,
+  ) {
     this.writeIndex(buffer, resolver);
     const uint32Reader = new UInt32Reader();
     uint32Reader.write(buffer, content.length, null);

@@ -6,24 +6,30 @@ import CharReader from "./CharReader.ts";
 import Int32Reader from "./Int32Reader.ts";
 import ListReader from "./ListReader.ts";
 import NullableReader from "./NullableReader.ts";
-import RectangleReader from "./RectangleReader.ts";
+import RectangleReader, { Rectangle } from "./RectangleReader.ts";
 import SingleReader from "./SingleReader.ts";
 import Texture2DReader from "./Texture2DReader.js";
 import Vector3Reader from "./Vector3Reader.ts";
 
-/**
- * SpriteFont Reader
- * @class
- * @extends BaseReader
- */
-class SpriteFontReader extends BaseReader {
-  /**
-     * Reads SpriteFont from buffer.
-     * @param {BufferReader} buffer
-     * @param {ReaderResolver} resolver
-     * @returns {object}
-     */
-  read(buffer: BufferReader, resolver: ReaderResolver) {
+// TODO
+type Texture2D = any;
+type Vector3 = any;
+
+export interface SpriteFont {
+  texture: Texture2D;
+  glyphs: Rectangle[];
+  cropping: Rectangle[];
+  characterMap: string[];
+  verticalLineSpacing: number;
+  horizontalSpacing: number;
+  kerning: Vector3[];
+  defaultCharacter: string | null;
+}
+
+/** SpriteFont Reader */
+class SpriteFontReader extends BaseReader<SpriteFont> {
+  /** Reads SpriteFont from buffer. */
+  read(buffer: BufferReader, resolver: ReaderResolver): SpriteFont {
     const int32Reader = new Int32Reader();
     const singleReader = new SingleReader();
     const nullableCharReader = new NullableReader(new CharReader());
@@ -49,16 +55,7 @@ class SpriteFontReader extends BaseReader {
     };
   }
 
-  write(buffer: BufferWriter, content: {
-    texture: unknown;
-    glyphs: any[];
-    cropping: any[];
-    characterMap: any[];
-    verticalLineSpacing: number;
-    horizontalSpacing: number;
-    kerning: any[];
-    defaultCharacter: any;
-  }, resolver?: ReaderResolver | null) {
+  write(buffer: BufferWriter, content: SpriteFont, resolver?: ReaderResolver | null) {
     const int32Reader = new Int32Reader();
     const charReader = new CharReader();
     const singleReader = new SingleReader();

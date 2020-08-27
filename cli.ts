@@ -5,7 +5,7 @@ import * as fs from "https://deno.land/std@0.66.0/fs/mod.ts";
 import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
 import Log from "./src/Log.ts";
 import { exportFile, resolveImports } from "./src/Porter.ts";
-import Xnb from "./src/Xnb.ts";
+import * as xnb from "./src/Xnb.ts";
 
 // used for displaying the tally of success and fail
 let success = 0;
@@ -72,13 +72,11 @@ function processUnpack(input: string, output: string) {
       return;
     }
 
-    // create new instance of XNB
-    const xnb = new Xnb();
-
     // load the XNB and get the object from it
-    const result = xnb.load(input);
+    Log.info(`Reading file "${input}"...`)
+    const result = xnb.unpack(Deno.readFileSync(input));
 
-    // @ts-ignore save the file
+    // save the file
     if (!exportFile(output, result)) {
       Log.error(`File ${output} failed to save!`);
       return fail++;
@@ -109,13 +107,10 @@ function processPack(input: string, output: string) {
 
     Log.info(`Reading file "${input}" ...`);
 
-    // create instance of xnb
-    const xnb = new Xnb();
-
     // resolve the imports
     const json = resolveImports(input);
     // convert the JSON to XNB
-    const buffer = xnb.convert(json);
+    const buffer = xnb.pack(json);
 
     // write the buffer to the output
     Deno.writeFileSync(output, buffer!);

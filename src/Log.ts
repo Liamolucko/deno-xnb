@@ -12,13 +12,9 @@ const LOG_INFO = 0b0010;
 const LOG_WARN = 0b0100;
 const LOG_ERROR = 0b1000;
 
-let _info = true, _warn = true, _error = true, _debug = false;
+let info = true, warn = true, error = true, debug = false;
 
-/**
- * Log class with static members to log messages to the console.
- * @class
- * @static
- */
+/** Log class with static members to log messages to the console. */
 class Log {
   static get DEBUG() {
     return LOG_DEBUG;
@@ -33,21 +29,24 @@ class Log {
     return LOG_ERROR;
   }
 
+  /** Whether to enable logging. */
+  static enabled = true;
+
   /**
    * Sets the debug mode setting.
    */
   static setMode(log: number, state: boolean) {
     if (log & LOG_DEBUG) {
-      _debug = state;
+      debug = state;
     }
     if (log & LOG_INFO) {
-      _info = state;
+      info = state;
     }
     if (log & LOG_WARN) {
-      _warn = state;
+      warn = state;
     }
     if (log & LOG_ERROR) {
-      _error = state;
+      error = state;
     }
   }
 
@@ -56,7 +55,7 @@ class Log {
    * @param message Message to display to the console as info.
    */
   static info(message: string = "") {
-    if (_info) {
+    if (this.enabled && info) {
       console.log(bold(blue("[INFO] ")) + message);
     }
   }
@@ -66,7 +65,7 @@ class Log {
    * @param message Message to display to the console if debug is enabled.
    */
   static debug(message: string = "") {
-    if (_debug) {
+    if (this.enabled && debug) {
       console.log(bold(magenta("[DEBUG] ")) + message);
     }
   }
@@ -76,7 +75,7 @@ class Log {
    * @param message Message to display to the console as a warning.
    */
   static warn(message: string = "") {
-    if (_warn) {
+    if (this.enabled && warn) {
       console.log(bold(yellow("[WARN] ")) + message);
     }
   }
@@ -86,7 +85,7 @@ class Log {
    * @param message Message to display to the console as an error.
    */
   static error(message: string = "") {
-    if (_error) {
+    if (this.enabled && error) {
       console.log(bold(red("[ERROR] ")) + message);
     }
   }

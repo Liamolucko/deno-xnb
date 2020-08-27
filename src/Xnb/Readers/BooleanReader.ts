@@ -3,34 +3,21 @@ import BufferReader from "../../BufferReader.ts";
 import BufferWriter from "../../BufferWriter.ts";
 import ReaderResolver from "../ReaderResolver.ts";
 
-/**
- * Boolean Reader
- * @class
- * @extends BaseReader
- */
-class BooleanReader extends BaseReader {
-  /**
-     * Reads Boolean from buffer.
-     * @param {BufferReader} buffer
-     * @returns {Boolean}
-     */
+/** Boolean Reader */
+class BooleanReader extends BaseReader<boolean> {
+  /** Reads Boolean from buffer. */
   read(buffer: BufferReader): boolean {
     return Boolean(buffer.readInt());
   }
 
-  /**
-     * Writes Boolean into buffer
-     * @param {BufferWriter} buffer
-     * @param {Mixed} data
-     * @param {ReaderResolver}
-     */
+  /** Writes Boolean into buffer */
   write(
     buffer: BufferWriter,
     content: boolean,
     resolver?: ReaderResolver | null,
   ) {
     this.writeIndex(buffer, resolver);
-    buffer.writeByte(content ? 1 : 0);
+    buffer.writeByte(Number(content));
   }
 }
 

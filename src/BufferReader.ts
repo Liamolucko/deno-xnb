@@ -1,155 +1,96 @@
-import { bgBlue, bgMagenta, black, gray } from "https://deno.land/std@0.66.0/fmt/colors.ts";
-import * as fs from "https://deno.land/std@0.66.0/fs/mod.ts";
-import XnbError from './XnbError.ts';
+import {
+  bgBlue,
+  bgMagenta,
+  black,
+  gray
+} from "https://deno.land/std@0.66.0/fmt/colors.ts";
+import XnbError from "./XnbError.ts";
 
 const LITTLE_ENDIAN = 0;
 const BIG_ENDIAN = 1;
 
 class BufferReader {
-  private _buffer: Uint8Array;
-  private _dataView: DataView;
-  private _offset: number;
-  private _bitOffset: number;
-  private _lastDebugLoc: number;
-  private _endianus: number;
+  /** The internal buffer for the reader */
+  #buffer: Uint8Array;
+  #data: DataView;
+  /** Seek index for the internal buffer. */
+  #offset: number;
+  /** Bit offset for bit reading. */
+  #bitOffset: number;
+  /** Last debug location for logging byte locations */
+  #lastDebugLoc: number;
+  /** The endianness of the buffer stream */
+  #endianus: number;
 
   /**
    * Creates instance of Reader class.
-   * @constructor
-   * @param filename The filename to read with the reader.
+   * @param buffer The buffer to read with the reader.
    */
-  constructor(filename: string, endianus = LITTLE_ENDIAN) {
-    // ensure the file exists
-    if (!fs.existsSync(filename)) {
-      throw new XnbError(`"${filename}" does not exist!`);
-    }
+  constructor(buffer: Uint8Array, endianus = LITTLE_ENDIAN) {
+    this.#endianus = endianus;
 
-    /**
-     * Sets the endianness of the buffer stream
-     * @private
-     * @type {Number}
-     */
-    this._endianus = endianus;
+    this.#buffer = buffer;
+    this.#data = new DataView(this.buffer.buffer);
 
-    /**
-     * internal buffer for the reader
-     * @private
-     * @type 
-     */
-    this._buffer = Deno.readFileSync(filename);
-    this._dataView = new DataView(this.buffer.buffer);
+    this.#offset = 0;
 
-    /**
-     * Seek index for the internal buffer.
-     * @private
-     * @type
-     */
-    this._offset = 0;
+    this.#bitOffset = 0;
 
-    /**
-     * Bit offset for bit reading.
-     * @private
-     * @type
-     */
-    this._bitOffset = 0;
-
-    /**
-     * Last debug location for logging byte locations
-     * @private
-     * @type
-     */
-    this._lastDebugLoc = 0;
+    this.#lastDebugLoc = 0;
   }
 
   /**
-    * Seeks to a specific index in the buffer.
-    * @public
-    * @param index Sets the buffer seek index.
-    * @param origin Location to seek from
-    */
-  seek(index: number, origin: number = this._offset) {
-    const offset = this._offset;
-    this._offset = Math.max(origin + index, 0);
-    if (this._offset < 0 || this._offset > this.buffer.length) {
+   * Seeks to a specific index in the buffer.
+   * @param index Sets the buffer seek index.
+   * @param origin Location to seek from
+   */
+  seek(index: number, origin: number = this.#offset) {
+    const offset = this.#offset;
+    this.#offset = Math.max(origin + index, 0);
+    if (this.#offset < 0 || this.#offset > this.buffer.length) {
       throw new XnbError(
-        `Buffer seek out of bounds! ${this._offset} ${this.buffer.length}`,
+        `Buffer seek out of bounds! ${this.#offset} ${this.buffer.length}`,
       );
     }
-    return this._offset - offset;
+    return this.#offset - offset;
   }
 
-  /**
-     * Gets the seek index of the buffer.
-     * @public
-     * @property bytePosition
-     * @return Reurns the buffer seek index.
-     */
+  /** The seek index of the buffer. */
   get bytePosition(): number {
-    return this._offset;
+    return this.#offset;
   }
 
-  /**
-     * Sets the seek index of the buffer.
-     * @public
-     * @property bytePosition
-     * @param value
-     */
   set bytePosition(value: number) {
-    this._offset = value;
+    this.#offset = value;
   }
 
-  /**
-     * Gets the current position for bit reading.
-     * @public
-     * @property _bitPosition
-     * @returns
-     */
+  /** The current position for bit reading. */
   get bitPosition(): number {
-    return this._bitOffset;
+    return this.#bitOffset;
   }
 
-  /**
-     * Sets the bit position clamped at 16-bit frames
-     * @public
-     * @property bitPosition
-     * @param offset
-     */
   set bitPosition(offset: number) {
     // when rewinding, reset it back to
     if (offset < 0) offset = 16 - offset;
     // set the offset and clamp to 16-bit frame
-    this._bitOffset = offset % 16;
+    this.#bitOffset = offset % 16;
     // get byte seek for bit ranges that wrap past 16-bit frames
     const byteSeek = ((offset - (Math.abs(offset) % 16)) / 16) * 2;
     // seek ahead for overflow on 16-bit frames
     this.seek(byteSeek);
   }
 
-  /**
-     * Get the buffer size.
-     * @public
-     * @property size
-     * @return {Number} Returns the size of the buffer.
-     */
+  /** The buffer size. */
   get size(): number {
     return this.buffer.length;
   }
 
-  /**
-     * Returns the buffer.
-     * @public
-     * @property buffer
-     * @returns {Buffer} Returns the internal buffer.
-     */
+  /** The buffer being read. */
   get buffer(): Uint8Array {
-    return this._buffer;
+    return this.#buffer;
   }
 
-  /**
-     * Writes another buffer into this buffer.
-     * @public
-     * @method write
-     */
+  /** Writes another buffer into this buffer. */
   copyFrom(
     buffer: Uint8Array,
     targetIndex: number = 0,
@@ -167,8 +108,8 @@ class BufferReader {
       // copy the buffer given into the temp buffer
       tempBuffer.set(buffer.slice(sourceIndex, length), targetIndex);
       // assign our buffer to the temporary buffer
-      this._buffer = tempBuffer;
-      this._dataView = new DataView(this.buffer.buffer);
+      this.#buffer = tempBuffer;
+      this.#data = new DataView(this.buffer.buffer);
     } else {
       // copy the buffer into our buffer
       this.buffer.set(buffer.slice(sourceIndex, length), targetIndex);
@@ -176,15 +117,13 @@ class BufferReader {
   }
 
   /**
-     * Reads a specific number of bytes.
-     * @public
-     * @method read
-     * @param count Number of bytes to read.
-     * @returns Contents of the buffer.
-     */
+   * Reads a specific number of bytes.
+   * @param count Number of bytes to read.
+   * @returns Contents of the buffer.
+   */
   read(count: number): Uint8Array {
     // read from the buffer
-    const buffer = this.buffer.slice(this._offset, this._offset + count);
+    const buffer = this.buffer.slice(this.#offset, this.#offset + count);
     // advance seek offset
     this.seek(count);
     // debug this read
@@ -196,7 +135,7 @@ class BufferReader {
   /**
      * Reads a single byte
      * @public
-     * @returns {Number}
+     * @returns
      */
   readByte(): number {
     return this.readUInt();
@@ -205,7 +144,7 @@ class BufferReader {
   /**
      * Reads an int8
      * @public
-     * @returns {Number}
+     * @returns
      */
   readInt(): number {
     const out = this.peekInt();
@@ -216,7 +155,7 @@ class BufferReader {
   /**
      * Reads an uint8
      * @public
-     * @returns {Number}
+     * @returns
      */
   readUInt(): number {
     const out = this.peekUInt();
@@ -227,7 +166,7 @@ class BufferReader {
   /**
      * Reads a uint16
      * @public
-     * @returns {Number}
+     * @returns
      */
   readUInt16(): number {
     const out = this.peekUInt16();
@@ -238,7 +177,7 @@ class BufferReader {
   /**
      * Reads a uint32
      * @public
-     * @returns {Number}
+     * @returns
      */
   readUInt32(): number {
     const out = this.peekUInt32();
@@ -249,7 +188,7 @@ class BufferReader {
   /**
      * Reads an int16
      * @public
-     * @returns {Number}
+     * @returns
      */
   readInt16(): number {
     const out = this.peekInt16();
@@ -260,7 +199,7 @@ class BufferReader {
   /**
      * Reads an int32
      * @public
-     * @returns {Number}
+     * @returns
      */
   readInt32(): number {
     const out = this.peekInt32();
@@ -271,7 +210,7 @@ class BufferReader {
   /**
      * Reads a float
      * @public
-     * @returns {Number}
+     * @returns
      */
   readSingle(): number {
     const out = this.peekSingle();
@@ -308,13 +247,7 @@ class BufferReader {
     return new TextDecoder().decode(this.read(count));
   }
 
-  /**
-     * Peeks ahead in the buffer without actually seeking ahead.
-     * @public
-     * @method peek
-     * @param count Number of bytes to peek.
-     * @returns Contents of the buffer.
-     */
+  /** Peeks ahead in the buffer without actually seeking ahead. */
   peek(count: number): Uint8Array {
     // read from the buffer
     const buffer = this.read(count);
@@ -324,93 +257,55 @@ class BufferReader {
     return buffer;
   }
 
-  /**
-     * Peeks a single byte
-     * @public
-     * @returns {Number}
-     */
-  peekByte(): number {
-    return this.peekUInt();
+  /** Peeks a single byte */
+  peekByte(offset = this.#offset): number {
+    return this.peekUInt(offset);
   }
 
-  /**
-     * Peeks an int8
-     * @public
-     * @returns {Number}
-     */
-  peekInt(): number {
-    return this._dataView.getInt8(this._offset);
+  /** Peeks an int8 */
+  peekInt(offset = this.#offset): number {
+    return this.#data.getInt8(offset);
   }
 
-  /**
-     * Peeks an uint8
-     * @public
-     * @returns {Number}
-     */
-  peekUInt(): number {
-    return this._dataView.getUint8(this._offset);
+  /** Peeks an uint8 */
+  peekUInt(offset = this.#offset): number {
+    return this.#data.getUint8(offset);
   }
 
-  /**
-     * Peeks a uint16
-     * @public
-     * @returns {Number}
-     */
-  peekUInt16(): number {
-    return this._dataView.getUint16(this._offset, this._endianus === LITTLE_ENDIAN);
+  /** Peeks a uint16 */
+  peekUInt16(offset = this.#offset): number {
+    return this.#data.getUint16(offset, this.#endianus === LITTLE_ENDIAN);
   }
 
-  /**
-     * Peeks a uint32
-     * @public
-     * @returns {Number}
-     */
-  peekUInt32(): number {
-    return this._dataView.getUint32(this._offset, this._endianus === LITTLE_ENDIAN);
+  /** Peeks a uint32 */
+  peekUInt32(offset = this.#offset): number {
+    return this.#data.getUint32(offset, this.#endianus === LITTLE_ENDIAN);
   }
 
-  /**
-     * Peeks an int16
-     * @public
-     * @returns {Number}
-     */
-  peekInt16(): number {
-    return this._dataView.getInt16(this._offset, this._endianus === LITTLE_ENDIAN);
+  /** Peeks an int16 */
+  peekInt16(offset = this.#offset): number {
+    return this.#data.getInt16(offset, this.#endianus === LITTLE_ENDIAN);
   }
 
-  /**
-     * Peeks an int32
-     * @public
-     * @returns {Number}
-     */
-  peekInt32(): number {
-    return this._dataView.getInt32(this._offset, this._endianus === LITTLE_ENDIAN);
+  /** Peeks an int32 */
+  peekInt32(offset = this.#offset): number {
+    return this.#data.getInt32(offset, this.#endianus === LITTLE_ENDIAN);
   }
 
-  /**
-     * Peeks a float
-     * @public
-     * @returns {Number}
-     */
-  peekSingle(): number {
-    return this._dataView.getFloat32(this._offset, this._endianus === LITTLE_ENDIAN);
+  /** Peeks a float */
+  peekSingle(offset = this.#offset): number {
+    return this.#data.getFloat32(offset, this.#endianus === LITTLE_ENDIAN);
   }
 
-  /**
-     * Peeks a double
-     * @public
-     * @returns {Number}
-     */
-  peekDouble(): number {
-    return this._dataView.getFloat64(this._offset, this._endianus === LITTLE_ENDIAN);
+  /** Peeks a double */
+  peekDouble(offset = this.#offset): number {
+    return this.#data.getFloat64(offset, this.#endianus === LITTLE_ENDIAN);
   }
 
-  /**
-     * Peeks a string
-     * @public
-     * @param {Number} [count]
-     * @returns {String}
-     */
+  /** 
+   * Peeks a string
+   * @param count The number of characters to peek
+   */
   peekString(count: number = 0): string {
     if (count === 0) {
       const bytePosition = this.bytePosition;
@@ -424,12 +319,7 @@ class BufferReader {
     return new TextDecoder().decode(this.peek(count));
   }
 
-  /**
-     * Reads a 7-bit number.
-     * @public
-     * @method read7BitNumber
-     * @returns {Number} Returns the number read.
-     */
+  /** Reads a 7-bit number. */
   read7BitNumber(): number {
     let result = 0;
     let bitsRead = 0;
@@ -446,12 +336,9 @@ class BufferReader {
   }
 
   /**
-     * Reads bits used for LZX compression.
-     * @public
-     * @method readLZXBits
-     * @param {Number} bits
-     * @returns {Number}
-     */
+   * Reads bits used for LZX compression.
+   * @param bits The number of bits to read.
+   */
   readLZXBits(bits: number): number {
     // initialize values for the loop
     let bitsLeft = bits;
@@ -460,7 +347,10 @@ class BufferReader {
     // read bits in 16-bit chunks
     while (bitsLeft > 0) {
       // peek in a 16-bit value
-      const peek = this._dataView.getUint16(this._offset, this._endianus === LITTLE_ENDIAN);
+      const peek = this.#data.getUint16(
+        this.#offset,
+        this.#endianus === LITTLE_ENDIAN,
+      );
 
       // clamp bits into the 16-bit frame we have left only read in as much as we have left
       const bitsInFrame = Math.min(
@@ -490,12 +380,9 @@ class BufferReader {
   }
 
   /**
-     * Used to peek bits.
-     * @public
-     * @method peekLZXBits
-     * @param {Number} bits
-     * @returns {Number}
-     */
+   * Used to peek bits.
+   * @param bits The number of bits to peek
+   */
   peekLZXBits(bits: number): number {
     // get the current bit position to store
     let bitPosition = this.bitPosition;
@@ -515,17 +402,14 @@ class BufferReader {
   }
 
   /**
-     * Reads a 16-bit integer from a LZX bitstream
-     *
-     * bytes are reverse as the bitstream sequences 16 bit integers stored as LSB -> MSB (bytes)
-     * abc[...]xyzABCDEF as bits would be stored as:
-     * [ijklmnop][abcdefgh][yzABCDEF][qrstuvwx]
-     *
-     * @public
-     * @method readLZXInt16
-     * @param {Boolean} seek
-     * @returns {Number}
-     */
+   * Reads a 16-bit integer from a LZX bitstream
+   *
+   * bytes are reverse as the bitstream sequences 16 bit integers stored as LSB -> MSB (bytes)
+   * abc[...]xyzABCDEF as bits would be stored as:
+   * [ijklmnop][abcdefgh][yzABCDEF][qrstuvwx]
+   *
+   * @param seek Whether to update the seek position
+   */
   readLZXInt16(seek: boolean = true): number {
     // read in the next two bytes worth of data
     const lsB = this.readByte();
@@ -540,21 +424,14 @@ class BufferReader {
     return (lsB << 8) | msB;
   }
 
-  /**
-     * Aligns to 16-bit offset.
-     * @public
-     * @method align
-     */
+  /** Aligns to 16-bit offset. */
   align() {
     if (this.bitPosition > 0) {
       this.bitPosition += 16 - this.bitPosition;
     }
   }
 
-  /**
-     * Used only for error logging.
-     * @public
-     */
+  /** Used only for error logging. */
   debug() {
     // store reference to the byte position
     const bytePosition = this.bytePosition;
@@ -579,7 +456,7 @@ class BufferReader {
       chars.push(char);
       i++;
     }
-    const ldlpos = diff - (bytePosition - this._lastDebugLoc);
+    const ldlpos = diff - (bytePosition - this.#lastDebugLoc);
     // replace the selected byte with brackets
     bytes[diff] = black(bgBlue(bytes[diff]));
     if (ldlpos > 0 && ldlpos < 16) {
@@ -593,7 +470,7 @@ class BufferReader {
     // re-seek back
     this.seek(bytePosition, 0);
     // update last debug loc
-    this._lastDebugLoc = bytePosition;
+    this.#lastDebugLoc = bytePosition;
   }
 }
 

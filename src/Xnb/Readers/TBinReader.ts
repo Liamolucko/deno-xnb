@@ -4,11 +4,7 @@ import BufferWriter from "../../BufferWriter.ts";
 import Int32Reader from "./Int32Reader.ts";
 import ReaderResolver from "../ReaderResolver.ts";
 
-/**
- * TBin Reader
- * @class
- * @extends BaseReader
- */
+/** TBin Reader */
 class TBinReader extends BaseReader {
   read(buffer: BufferReader) {
     const int32Reader = new Int32Reader();
