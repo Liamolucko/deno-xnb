@@ -1,8 +1,8 @@
-import { Command } from "https://cdn.depjs.com/cmd/mod.ts";
-import { walkSync } from "https://deno.land/std@0.65.0/fs/walk.ts";
 import { bold, green, red } from "https://deno.land/std@0.66.0/fmt/colors.ts";
-import * as fs from "https://deno.land/std@0.66.0/fs/mod.ts";
+import { exists } from "https://deno.land/std@0.66.0/fs/exists.ts";
+import { walk } from "https://deno.land/std@0.66.0/fs/walk.ts";
 import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
+import Denomander from "https://deno.land/x/denomander@0.6.3/mod.ts";
 import Log from "./src/Log.ts";
 import { exportFile, resolveImports } from "./src/Porter.ts";
 import * as xnb from "./src/Xnb.ts";
@@ -11,12 +11,12 @@ import * as xnb from "./src/Xnb.ts";
 let success = 0;
 let fail = 0;
 
-// define the version number
-const VERSION = "1.0.6";
-
 // create the program and set version number
-const program = new Command("xnbcli");
-program.version(VERSION);
+const program = new Denomander({
+  app_name: "xnbcli",
+  app_description: "Packs and unpacks XNB files",
+  app_version: "1.0.6",
+});
 
 // turn on debug printing
 program.option("--debug", "Enables debug verbose printing.", () => {
@@ -30,41 +30,38 @@ program.option("--errors", "Only prints error messages.", () => {
 
 // XNB unpack command
 program
-  .command("unpack <input> [output]")
-  .action((input, output) => {
+  .command("unpack [input] [output?]")
+  .action(({ input, output }: Record<string, string>) => {
     // process the unpack
-    processFiles(processUnpack, input, output, details);
+    processFiles(unpackFile, input, output, details);
   })
   .description("Used to unpack XNB files.");
 
 // XNB pack Command
 program
-  .command("pack <input> [output]")
-  .action((input, output) => {
+  .command("pack [input] [output?]")
+  .action(({ input, output }: Record<string, string>) => {
     // process the pack
-    processFiles(processPack, input, output, details);
+    processFiles(packFile, input, output, details);
   })
   .description("Used to pack XNB files.");
-
-// default action
-program.action(() => program.help());
 
 // parse the input and run the commander program
 program.parse(Deno.args);
 
-/**
- * Display the results of the processing
- */
+/** Display the results of the processing */
 function details() {
   // give a final analysis of the files
   console.log(`${bold(green("Success"))} ${success}`);
   console.log(`${bold(red("Fail"))} ${fail}`);
 }
 
-/**
- * Takes input and processes input for unpacking.
+/** 
+ * Unpack an XNB file to JSON.
+ * @param input The path of the XNB file to unpack.
+ * @param output The path at which to save the result.
  */
-function processUnpack(input: string, output: string) {
+async function unpackFile(input: string, output: string) {
   // catch any exceptions to keep a batch of files moving
   try {
     // ensure that the input file has the right extension
@@ -73,11 +70,11 @@ function processUnpack(input: string, output: string) {
     }
 
     // load the XNB and get the object from it
-    Log.info(`Reading file "${input}"...`)
-    const result = xnb.unpack(Deno.readFileSync(input));
+    Log.info(`Reading file "${input}"...`);
+    const result = xnb.unpack(await Deno.readFile(input));
 
     // save the file
-    if (!exportFile(output, result)) {
+    if (!await exportFile(output, result)) {
       Log.error(`File ${output} failed to save!`);
       return fail++;
     }
@@ -95,10 +92,12 @@ function processUnpack(input: string, output: string) {
   }
 }
 
-/**
- * Process the pack of files to xnb
+/** 
+ * Pack a file to xnb.
+ * @param input The path of the JSON file to pack.
+ * @param output The path at which to save the resulting file.
  */
-function processPack(input: string, output: string) {
+async function packFile(input: string, output: string) {
   try {
     // ensure that the input file has the right extension
     if (path.extname(input).toLocaleLowerCase() != ".json") {
@@ -113,7 +112,7 @@ function processPack(input: string, output: string) {
     const buffer = xnb.pack(json);
 
     // write the buffer to the output
-    Deno.writeFileSync(output, buffer!);
+    await Deno.writeFile(output, buffer);
 
     // log that the file was saved
     Log.info(`Output file saved: ${output}`);
@@ -128,17 +127,15 @@ function processPack(input: string, output: string) {
   }
 }
 
-/**
- * Used to walk a path with input/output for processing
- */
-function processFiles(
-  fn: Function,
+/** Used to walk a path with input/output for processing */
+async function processFiles(
+  handler: (input: string, output: string) => any,
   input: string,
   output: string,
-  cb: Function,
+  doneCallback: () => any,
 ) {
   // if this isn't a directory then just run the function
-  if (!Deno.statSync(input).isDirectory) {
+  if (!(await Deno.stat(input)).isDirectory) {
     // get the extension from the original path name
     const ext = path.extname(input);
     // get the new extension
@@ -151,12 +148,12 @@ function processFiles(
         path.basename(input, ext) + newExt,
       );
     } // output is a directory
-    else if (Deno.statSync(output).isDirectory) {
+    else if ((await Deno.stat(output)).isDirectory) {
       output = path.join(output, path.basename(input, ext) + newExt);
     }
 
     // call the function
-    return fn(input, output);
+    return handler(input, output);
   }
 
   // output is undefined
@@ -164,7 +161,7 @@ function processFiles(
     output = input;
   }
 
-  for (const entry of walkSync(input)) {
+  for await (const entry of walk(input)) {
     // when we encounter a file
     if (entry.isFile) {
       // get the extension
@@ -187,17 +184,17 @@ function processFiles(
       );
 
       // ensure the path to the output file exists
-      if (!fs.existsSync(path.dirname(inputFile))) {
-        Deno.mkdirSync(outputFile, { recursive: true });
+      if (!await exists(path.dirname(inputFile))) {
+        await Deno.mkdir(outputFile, { recursive: true });
       }
 
       // run the function
-      fn(inputFile, outputFile);
+      handler(inputFile, outputFile);
     }
 
     // The original ignored errors, but I'm not sure how to do that here.
   }
 
   // done walking the dog
-  cb();
+  doneCallback();
 }

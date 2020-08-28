@@ -1,4 +1,4 @@
-import * as LZ4 from "https://deno.land/x/lz4/mod.ts";
+import * as lz4 from "https://deno.land/x/lz4@v0.1.2/mod.ts";
 import { getReader, simplifyType } from "./Xnb/TypeReader.ts";
 import BufferReader from "./BufferReader.ts";
 import BufferWriter from "./BufferWriter.ts";
@@ -80,7 +80,7 @@ export function unpack(file: Uint8Array): XnbJson {
       // allocate buffer for LZ4 decode
       let trimmed = buffer.buffer.slice(XNB_COMPRESSED_PROLOGUE_SIZE);
       // decode the trimmed buffer into decompressed buffer
-      const decompressed = LZ4.decompress(trimmed);
+      const decompressed = lz4.decompress(trimmed);
       // copy the decompressed buffer into our buffer
       buffer.copyFrom(
         decompressed,
@@ -222,7 +222,7 @@ export function pack(json: XnbJson) {
     const contentBuffer = buffer.buffer.slice(XNB_COMPRESSED_PROLOGUE_SIZE);
 
     // create a buffer for the compressed data
-    const compressed = LZ4.compress(contentBuffer);
+    const compressed = lz4.compress(contentBuffer);
     const compressedSize = compressed.length;
 
     // write the decompressed size into the buffer

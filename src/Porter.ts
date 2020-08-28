@@ -1,10 +1,10 @@
-import * as fs from "https://deno.land/std@0.66.0/fs/mod.ts";
-import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
-import Log from "./Log.ts";
-import XnbError from "./XnbError.ts";
 // @deno-types="./upng.d.ts"
 import UPNG from "https://cdn.skypack.dev/upng-js";
+import { exists } from "https://deno.land/std@0.66.0/fs/exists.ts";
+import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
+import Log from "./Log.ts";
 import { XnbJson } from "./Xnb.ts";
+import XnbError from "./XnbError.ts";
 
 // I think this is what the original was trying to do, but I'm not sure.
 function getNestedValue(obj: Record<string, any>, keys: string[]): any | null {
@@ -17,17 +17,17 @@ function getNestedValue(obj: Record<string, any>, keys: string[]): any | null {
 }
 
 /** Used to save a parsed XNB file. */
-export function exportFile(
+export async function exportFile(
   filename: string,
   xnbObject: { content: Record<string, any> },
-): boolean {
+) {
   // get the dirname for the file
   const dirname = path.dirname(filename);
   // get the basename for the file
   const basename = path.basename(filename, ".json");
 
   // create folder path if it doesn't exist
-  if (!fs.existsSync(dirname)) {
+  if (!await exists(dirname)) {
     Deno.mkdirSync(dirname, { recursive: true });
   }
 
@@ -123,8 +123,6 @@ export function exportFile(
 export function resolveImports(filename: string): XnbJson {
   // get the directory name
   const dirname = path.dirname(filename);
-  // get the basename for the file
-  const basename = path.basename(filename);
 
   // read in the file contents
   const buffer = Deno.readTextFileSync(filename);

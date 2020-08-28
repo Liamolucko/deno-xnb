@@ -29,9 +29,6 @@ class Log {
     return LOG_ERROR;
   }
 
-  /** Whether to enable logging. */
-  static enabled = true;
-
   /**
    * Sets the debug mode setting.
    */
@@ -55,7 +52,7 @@ class Log {
    * @param message Message to display to the console as info.
    */
   static info(message: string = "") {
-    if (this.enabled && info) {
+    if (info) {
       console.log(bold(blue("[INFO] ")) + message);
     }
   }
@@ -65,7 +62,7 @@ class Log {
    * @param message Message to display to the console if debug is enabled.
    */
   static debug(message: string = "") {
-    if (this.enabled && debug) {
+    if (debug) {
       console.log(bold(magenta("[DEBUG] ")) + message);
     }
   }
@@ -75,7 +72,7 @@ class Log {
    * @param message Message to display to the console as a warning.
    */
   static warn(message: string = "") {
-    if (this.enabled && warn) {
+    if (warn) {
       console.log(bold(yellow("[WARN] ")) + message);
     }
   }
@@ -85,7 +82,7 @@ class Log {
    * @param message Message to display to the console as an error.
    */
   static error(message: string = "") {
-    if (this.enabled && error) {
+    if (error) {
       console.log(bold(red("[ERROR] ")) + message);
     }
   }
