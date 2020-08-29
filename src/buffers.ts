@@ -6,9 +6,6 @@ import {
 } from "https://deno.land/std@0.66.0/fmt/colors.ts";
 import XnbError from "./error.ts";
 
-const LITTLE_ENDIAN = 0;
-const BIG_ENDIAN = 1;
-
 export class BufferReader {
   /** The internal buffer for the reader */
   #buffer: Uint8Array;
@@ -19,16 +16,12 @@ export class BufferReader {
   #bitOffset: number;
   /** Last debug location for logging byte locations */
   #lastDebugLoc: number;
-  /** The endianness of the buffer stream */
-  #endianus: number;
 
   /**
    * Creates instance of Reader class.
    * @param buffer The buffer to read with the reader.
    */
-  constructor(buffer: Uint8Array, endianus = LITTLE_ENDIAN) {
-    this.#endianus = endianus;
-
+  constructor(buffer: Uint8Array) {
     this.#buffer = buffer;
     this.#data = new DataView(this.buffer.buffer);
 
@@ -258,48 +251,48 @@ export class BufferReader {
   }
 
   /** Peeks a single byte */
-  peekByte(offset = this.#offset): number {
-    return this.peekUInt(offset);
+  peekByte(): number {
+    return this.peekUInt();
   }
 
   /** Peeks an int8 */
-  peekInt(offset = this.#offset): number {
-    return this.#data.getInt8(offset);
+  peekInt(): number {
+    return this.#data.getInt8(this.#offset);
   }
 
   /** Peeks an uint8 */
-  peekUInt(offset = this.#offset): number {
-    return this.#data.getUint8(offset);
+  peekUInt(): number {
+    return this.#data.getUint8(this.#offset);
   }
 
   /** Peeks a uint16 */
-  peekUInt16(offset = this.#offset): number {
-    return this.#data.getUint16(offset, this.#endianus === LITTLE_ENDIAN);
+  peekUInt16(): number {
+    return this.#data.getUint16(this.#offset, true);
   }
 
   /** Peeks a uint32 */
-  peekUInt32(offset = this.#offset): number {
-    return this.#data.getUint32(offset, this.#endianus === LITTLE_ENDIAN);
+  peekUInt32(): number {
+    return this.#data.getUint32(this.#offset, true);
   }
 
   /** Peeks an int16 */
-  peekInt16(offset = this.#offset): number {
-    return this.#data.getInt16(offset, this.#endianus === LITTLE_ENDIAN);
+  peekInt16(): number {
+    return this.#data.getInt16(this.#offset, true);
   }
 
   /** Peeks an int32 */
-  peekInt32(offset = this.#offset): number {
-    return this.#data.getInt32(offset, this.#endianus === LITTLE_ENDIAN);
+  peekInt32(): number {
+    return this.#data.getInt32(this.#offset, true);
   }
 
   /** Peeks a float */
-  peekSingle(offset = this.#offset): number {
-    return this.#data.getFloat32(offset, this.#endianus === LITTLE_ENDIAN);
+  peekSingle(): number {
+    return this.#data.getFloat32(this.#offset, true);
   }
 
   /** Peeks a double */
-  peekDouble(offset = this.#offset): number {
-    return this.#data.getFloat64(offset, this.#endianus === LITTLE_ENDIAN);
+  peekDouble(): number {
+    return this.#data.getFloat64(this.#offset, true);
   }
 
   /** 
@@ -349,7 +342,7 @@ export class BufferReader {
       // peek in a 16-bit value
       const peek = this.#data.getUint16(
         this.#offset,
-        this.#endianus === LITTLE_ENDIAN,
+        true,
       );
 
       // clamp bits into the 16-bit frame we have left only read in as much as we have left
@@ -564,7 +557,7 @@ export class BufferWriter {
    * @param number 
    */
   writeInt16(number: number) {
-    this.alloc(2).dataView.setInt16(this.bytePosition, number);
+    this.alloc(2).dataView.setInt16(this.bytePosition, number, true);
     this.bytePosition += 2;
   }
 
@@ -573,7 +566,7 @@ export class BufferWriter {
    * @param number 
    */
   writeUInt16(number: number) {
-    this.alloc(2).dataView.setUint16(this.bytePosition, number);
+    this.alloc(2).dataView.setUint16(this.bytePosition, number, true);
     this.bytePosition += 2;
   }
 
@@ -582,7 +575,7 @@ export class BufferWriter {
    * @param number 
    */
   writeInt32(number: number) {
-    this.alloc(4).dataView.setInt32(this.bytePosition, number);
+    this.alloc(4).dataView.setInt32(this.bytePosition, number, true);
     this.bytePosition += 4;
   }
 
@@ -591,7 +584,7 @@ export class BufferWriter {
    * @param number 
    */
   writeUInt32(number: number) {
-    this.alloc(4).dataView.setUint32(this.bytePosition, number);
+    this.alloc(4).dataView.setUint32(this.bytePosition, number, true);
     this.bytePosition += 4;
   }
 
@@ -600,7 +593,7 @@ export class BufferWriter {
    * @param number 
    */
   writeSingle(number: number) {
-    this.alloc(4).dataView.setFloat32(this.bytePosition, number);
+    this.alloc(4).dataView.setFloat32(this.bytePosition, number, true);
     this.bytePosition += 4;
   }
 
@@ -609,7 +602,7 @@ export class BufferWriter {
    * @param number 
    */
   writeDouble(number: number) {
-    this.alloc(4).dataView.setFloat64(this.bytePosition, number);
+    this.alloc(4).dataView.setFloat64(this.bytePosition, number, true);
     this.bytePosition += 4;
   }
 
