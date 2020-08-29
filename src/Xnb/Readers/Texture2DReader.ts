@@ -1,25 +1,27 @@
-/** can't find deno version of dxt-js */
+import * as dxt from "https://denopkg.com/Liamolucko/deno-dxt/mod.ts";
+import BufferReader from "../../BufferReader.ts";
+import BufferWriter from "../../BufferWriter.ts";
+import Log from "../../Log.ts";
+import XnbError from "../../XnbError.ts";
+import ReaderResolver from "../ReaderResolver.ts";
+import BaseReader from "./BaseReader.ts";
+import Int32Reader from "./Int32Reader.ts";
+import UInt32Reader from "./UInt32Reader.ts";
 
-const BaseReader = require("./BaseReader");
-const BufferReader = require("../../BufferReader");
-const Int32Reader = require("./Int32Reader");
-const UInt32Reader = require("./UInt32Reader");
-const dxt = require("dxt-js");
-const Log = require("../../Log");
-const XnbError = require("../../XnbError");
+export interface Texture2D {
+  format: number;
+  export: {
+    type: string;
+    data: Uint8Array;
+    width: number;
+    height: number;
+  };
+}
 
-/**
- * Texture2D Reader
- * @class
- * @extends BaseReader
- */
-class Texture2DReader extends BaseReader {
-  /**
-     * Reads Texture2D from buffer.
-     * @param {BufferReader} buffer
-     * @returns {object}
-     */
-  read(buffer) {
+/** Texture2D Reader */
+class Texture2DReader extends BaseReader<Texture2D> {
+  /** Reads Texture2D from buffer. */
+  read(buffer: BufferReader): Texture2D {
     const int32Reader = new Int32Reader();
     const uint32Reader = new UInt32Reader();
 
@@ -36,11 +38,11 @@ class Texture2DReader extends BaseReader {
     let data = buffer.read(dataSize);
 
     if (format == 4) {
-      data = dxt.decompress(data, width, height, dxt.kDxt1);
+      data = dxt.decompress(data, width, height, dxt.flags.DXT1);
     } else if (format == 5) {
-      data = dxt.decompress(data, width, height, dxt.kDxt3);
+      data = dxt.decompress(data, width, height, dxt.flags.DXT3);
     } else if (format == 6) {
-      data = dxt.decompress(data, width, height, dxt.kDxt5);
+      data = dxt.decompress(data, width, height, dxt.flags.DXT5);
     } else if (format == 2) {
       // require('fs').writeFileSync('texture.bin', data);
       throw new XnbError("Texture2D format type ECT1 not implemented!");
@@ -69,13 +71,12 @@ class Texture2DReader extends BaseReader {
     };
   }
 
-  /**
-     * Writes Texture2D into the buffer
-     * @param {BufferWriter} buffer
-     * @param {Mixed} data The data
-     * @param {ReaderResolver} resolver
-     */
-  write(buffer, content, resolver) {
+  /** Writes Texture2D into the buffer */
+  write(
+    buffer: BufferWriter,
+    content: Texture2D,
+    resolver?: ReaderResolver | null,
+  ) {
     const int32Reader = new Int32Reader();
     const uint32Reader = new UInt32Reader();
 
@@ -102,11 +103,11 @@ class Texture2DReader extends BaseReader {
     }
 
     if (content.format == 4) {
-      data = dxt.compress(data, width, height, dxt.kDxt1);
+      data = dxt.compress(data, width, height, dxt.flags.DXT1);
     } else if (content.format == 5) {
-      data = dxt.compress(data, width, height, dxt.kDxt3);
+      data = dxt.compress(data, width, height, dxt.flags.DXT3);
     } else if (content.format == 6) {
-      data = dxt.compress(data, width, height, dxt.kDxt5);
+      data = dxt.compress(data, width, height, dxt.flags.DXT5);
     }
 
     uint32Reader.write(buffer, data.length, null);
@@ -118,4 +119,4 @@ class Texture2DReader extends BaseReader {
   }
 }
 
-module.exports = Texture2DReader;
+export default Texture2DReader;

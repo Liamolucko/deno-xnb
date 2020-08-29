@@ -1,6 +1,7 @@
 // @deno-types="./upng.d.ts"
 import UPNG from "https://cdn.skypack.dev/upng-js";
 import { exists } from "https://deno.land/std@0.66.0/fs/exists.ts";
+import { readJson } from "https://deno.land/std@0.66.0/fs/read_json.ts";
 import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
 import Log from "./Log.ts";
 import { XnbJson } from "./Xnb.ts";
@@ -28,7 +29,7 @@ export async function exportFile(
 
   // create folder path if it doesn't exist
   if (!await exists(dirname)) {
-    Deno.mkdirSync(dirname, { recursive: true });
+    await Deno.mkdir(dirname, { recursive: true });
   }
 
   // ensure we have content field
@@ -73,12 +74,12 @@ export async function exportFile(
     switch (exported.type) {
       // Texture2D to PNG
       case "Texture2D":
-        buffer = UPNG.encode(
+        buffer = new Uint8Array(UPNG.encode(
+          [exported.data.buffer],
           exported.width,
           exported.height,
-          exported.data,
           0,
-        );
+        ));
 
         extension = "png";
         break;
@@ -106,28 +107,30 @@ export async function exportFile(
     const outputFilename = path.resolve(dirname, `${basename}.${extension}`);
 
     // save the file
-    Deno.writeFileSync(outputFilename, buffer);
+    await Deno.writeFile(outputFilename, buffer);
 
     // set the exported value to the path
     foundContent["export"] = path.basename(outputFilename);
   }
 
   // save the XNB object as JSON
-  Deno.writeTextFileSync(filename, JSON.stringify(xnbObject, null, 4));
+  await Deno.writeTextFile(filename, JSON.stringify(xnbObject, null, 4));
 
   // successfully exported file(s)
   return true;
 }
 
 /** Resolves all exported content back into the object */
-export function resolveImports(filename: string): XnbJson {
+export async function resolveImports(filename: string): Promise<XnbJson> {
   // get the directory name
   const dirname = path.dirname(filename);
 
-  // read in the file contents
-  const buffer = Deno.readTextFileSync(filename);
   // get the JSON for the contents
-  const json = JSON.parse(buffer);
+  const json = await readJson(filename) as XnbJson;
+
+  if (typeof json !== "object") {
+    throw new XnbError(`${filename} contains an array instead of an object.`);
+  }
 
   // need content
   if (!json.hasOwnProperty("content")) {
@@ -146,11 +149,6 @@ export function resolveImports(filename: string): XnbJson {
     // get the exported buffer from found
     const exported = found.value;
 
-    // resolve found content based on key path if empty then its just content
-    const foundContent = (keyPath.length
-      ? getNestedValue(content, keyPath)
-      : content);
-
     if (exported == undefined) {
       throw new XnbError("Invalid file export!");
     }
@@ -158,7 +156,7 @@ export function resolveImports(filename: string): XnbJson {
     // form the path for the exported file
     const exportedPath = path.join(dirname, exported);
     // load in the exported file
-    const exportedFile = Deno.readFileSync(exportedPath);
+    const exportedFile = await Deno.readFile(exportedPath);
     // get the extention of the file
     const ext = path.extname(exportedPath);
 
@@ -176,16 +174,16 @@ export function resolveImports(filename: string): XnbJson {
         };
 
         if (keyPath.length) {
-          getNestedValue(json["content"], keyPath)["export"] = data;
+          getNestedValue(json.content, keyPath).export = data;
         } else {
-          json["content"]["export"] = data;
+          json.content.export = data;
         }
         break;
 
       // Compiled Effects
 
       case ".cso":
-        json["content"] = {
+        json.content = {
           type: "Effect",
           data: exportedFile,
         };
@@ -194,7 +192,7 @@ export function resolveImports(filename: string): XnbJson {
       // TBin Map
 
       case ".tbin":
-        json["content"] = {
+        json.content = {
           type: "TBin",
           data: exportedFile,
         };
@@ -203,7 +201,7 @@ export function resolveImports(filename: string): XnbJson {
       // BmFont Xml
 
       case ".xml":
-        json["content"] = {
+        json.content = {
           type: "BmFont",
           data: exportedFile.toString(),
         };

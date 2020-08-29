@@ -158,7 +158,7 @@ export function unpack(file: Uint8Array): XnbJson {
   };
 }
 
-/** Converts JSON into XNB file structure */
+/** Converts JSON into XNB buffer */
 export function pack(json: XnbJson) {
   // the output buffer for this file
   const buffer = new BufferWriter();

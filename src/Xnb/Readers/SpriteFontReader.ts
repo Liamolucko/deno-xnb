@@ -8,7 +8,7 @@ import ListReader from "./ListReader.ts";
 import NullableReader from "./NullableReader.ts";
 import RectangleReader, { Rectangle } from "./RectangleReader.ts";
 import SingleReader from "./SingleReader.ts";
-import Texture2DReader from "./Texture2DReader.js";
+import Texture2DReader from "./Texture2DReader.ts";
 import Vector3Reader from "./Vector3Reader.ts";
 
 // TODO

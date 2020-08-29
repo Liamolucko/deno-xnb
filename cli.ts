@@ -19,12 +19,12 @@ const program = new Denomander({
 });
 
 // turn on debug printing
-program.option("--debug", "Enables debug verbose printing.", () => {
+program.option("-d --debug", "Enables debug verbose printing.", () => {
   Log.setMode(Log.DEBUG, true);
 });
 
 // only display errors
-program.option("--errors", "Only prints error messages.", () => {
+program.option("-e --errors", "Only prints error messages.", () => {
   Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false);
 });
 
@@ -107,7 +107,7 @@ async function packFile(input: string, output: string) {
     Log.info(`Reading file "${input}" ...`);
 
     // resolve the imports
-    const json = resolveImports(input);
+    const json = await resolveImports(input);
     // convert the JSON to XNB
     const buffer = xnb.pack(json);
 
