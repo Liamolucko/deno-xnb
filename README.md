@@ -16,7 +16,7 @@ It's now usable as a module, and is also (in theory) now browser-compatible.
 
 ## Module
 ```typescript
-import * as xnb from "https://denopkg.com/Liamolucko/xnbcli/mod.ts";
+import * as xnb from "https://denopkg.com/Liamolucko/deno-xnb/mod.ts";
 
 const helloWorld = xnb.pack({
   header: {
