@@ -3,9 +3,9 @@ import { exists } from "https://deno.land/std@0.66.0/fs/exists.ts";
 import { walk } from "https://deno.land/std@0.66.0/fs/walk.ts";
 import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
 import Denomander from "https://deno.land/x/denomander@0.6.3/mod.ts";
-import Log from "./src/Log.ts";
-import { exportFile, resolveImports } from "./src/Porter.ts";
-import * as xnb from "./src/Xnb.ts";
+import * as xnb from "./mod.ts";
+import { exportFile, resolveExports } from "./src/exports.ts";
+import * as Log from "./src/log.ts";
 
 // used for displaying the tally of success and fail
 let success = 0;
@@ -46,8 +46,13 @@ program
   })
   .description("Used to pack XNB files.");
 
-// parse the input and run the commander program
-program.parse(Deno.args);
+if (import.meta.main) {
+  // Enable logger
+  Log.setMode(Log.INFO | Log.WARN | Log.ERROR, true);
+
+  // parse the input and run the commander program
+  program.parse(Deno.args);
+}
 
 /** Display the results of the processing */
 function details() {
@@ -107,7 +112,7 @@ async function packFile(input: string, output: string) {
     Log.info(`Reading file "${input}" ...`);
 
     // resolve the imports
-    const json = await resolveImports(input);
+    const json = await resolveExports(input);
     // convert the JSON to XNB
     const buffer = xnb.pack(json);
 
@@ -153,7 +158,7 @@ async function processFiles(
     }
 
     // call the function
-    return handler(input, output);
+    return await handler(input, output);
   }
 
   // output is undefined
@@ -174,12 +179,12 @@ async function processFiles(
       // swap the input base directory with the base output directory for our target directory
       const target = entry.path.replace(input, output);
       // get the source path
-      const inputFile = path.join(entry.path, entry.name);
+      const inputFile = entry.path;
       // get the target ext
       const targetExt = ext == ".xnb" ? ".json" : ".xnb";
       // form the output file path
       const outputFile = path.join(
-        target,
+        path.dirname(target),
         path.basename(entry.name, ext) + targetExt,
       );
 
@@ -189,7 +194,7 @@ async function processFiles(
       }
 
       // run the function
-      handler(inputFile, outputFile);
+      await handler(inputFile, outputFile);
     }
 
     // The original ignored errors, but I'm not sure how to do that here.

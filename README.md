@@ -9,7 +9,7 @@ It's now usable as a module, and is also (in theory) now browser-compatible.
 - [Deno](https://deno.land/)
 
 ### Installation
-`deno install --allow-read --allow-write https://denopkg.com/Liamolucko/deno-xnb/cli.ts`
+`deno install --allow-read --allow-write -n xnbcli https://denopkg.com/Liamolucko/deno-xnb/cli.ts`
 
 ### Usage
 `xnbcli (pack|unpack) [input] [output]`
