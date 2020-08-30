@@ -3,9 +3,13 @@ import upng from "https://cdn.skypack.dev/upng-js";
 import { exists } from "https://deno.land/std@0.66.0/fs/exists.ts";
 import { readJson } from "https://deno.land/std@0.66.0/fs/read_json.ts";
 import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
+import XnbError from "./error.ts";
 import * as Log from "./log.ts";
 import { XnbJson } from "./pack.ts";
-import XnbError from "./error.ts";
+import { BmFont } from "./xnb/readers/bm-font.ts";
+import { Effect } from "./xnb/readers/effect.ts";
+import { TBin } from "./xnb/readers/tbin.ts";
+import { Texture2D } from "./xnb/readers/texture2d.ts";
 
 // I think this is what the original was trying to do, but I'm not sure.
 function getNestedValue(obj: Record<string, any>, keys: string[]): any | null {
@@ -47,7 +51,7 @@ export async function exportFile(
     // get the key path from found
     const keyPath = found.path;
     // get the exported buffer from found
-    const exported = found.value;
+    const exported = found.value as Texture2D | Effect | TBin | BmFont;
 
     if (
       exported == undefined || exported.type == undefined ||
@@ -65,9 +69,9 @@ export async function exportFile(
     let extension = "bin";
 
     // resolve found content based on key path if empty then its just content
-    const foundContent = (keyPath.length
-      ? getNestedValue(content, keyPath)
-      : content);
+    const foundContent = keyPath.length === 0
+      ? content
+      : getNestedValue(content, keyPath);
 
     // switch over possible export types
     // TODO: make this a litle cleaner possibly with its own function
@@ -107,10 +111,22 @@ export async function exportFile(
     const outputFilename = path.resolve(dirname, `${basename}.${extension}`);
 
     // save the file
-    await Deno.writeFile(outputFilename, buffer);
+    if (buffer instanceof Uint8Array) {
+      await Deno.writeFile(outputFilename, buffer);
+    } else if (typeof buffer === "string") {
+      await Deno.writeTextFile(outputFilename, buffer);
+    } else {
+      throw new XnbError(
+        `Invalid output format '${
+          typeof buffer === "object"
+            ? (buffer as object).constructor.name
+            : typeof buffer
+        }'`,
+      );
+    }
 
     // set the exported value to the path
-    foundContent["export"] = path.basename(outputFilename);
+    foundContent.export = path.basename(outputFilename);
   }
 
   // save the XNB object as JSON

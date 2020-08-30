@@ -1,4 +1,4 @@
-import * as dxt from "https://denopkg.com/Liamolucko/deno-dxt/mod.ts";
+import * as dxt from "/home/liam/repos/deno-dxt/mod.ts";
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import XnbError from "../../error.ts";
 import * as Log from "../../log.ts";
@@ -8,19 +8,21 @@ import Int32Reader from "./int32.ts";
 import UInt32Reader from "./uint32.ts";
 
 export interface Texture2D {
+  type: 'Texture2D';
+  data: Uint8Array;
+  width: number;
+  height: number;
+}
+
+export interface Texture2DExport {
   format: number;
-  export: {
-    type: string;
-    data: Uint8Array;
-    width: number;
-    height: number;
-  };
+  export: Texture2D;
 }
 
 /** Texture2D Reader */
-class Texture2DReader extends BaseReader<Texture2D> {
+class Texture2DReader extends BaseReader<Texture2DExport> {
   /** Reads Texture2D from buffer. */
-  read(buffer: BufferReader): Texture2D {
+  read(buffer: BufferReader): Texture2DExport {
     const int32Reader = new Int32Reader();
     const uint32Reader = new UInt32Reader();
 
@@ -62,7 +64,7 @@ class Texture2DReader extends BaseReader<Texture2D> {
     return {
       format,
       export: {
-        type: this.type,
+        type: 'Texture2D',
         data,
         width,
         height,
@@ -73,7 +75,7 @@ class Texture2DReader extends BaseReader<Texture2D> {
   /** Writes Texture2D into the buffer */
   write(
     buffer: BufferWriter,
-    content: Texture2D,
+    content: Texture2DExport,
     resolver?: ReaderResolver | null,
   ) {
     const int32Reader = new Int32Reader();

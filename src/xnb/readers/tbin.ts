@@ -3,9 +3,14 @@ import ReaderResolver from "../reader-resolver.ts";
 import BaseReader from "./base.ts";
 import Int32Reader from "./int32.ts";
 
+export interface TBin {
+  type: "TBin";
+  data: Uint8Array;
+}
+
 /** TBin Reader */
 class TBinReader extends BaseReader {
-  read(buffer: BufferReader) {
+  read(buffer: BufferReader): { export: TBin } {
     const int32Reader = new Int32Reader();
 
     // read in the size of the data block
@@ -14,12 +19,12 @@ class TBinReader extends BaseReader {
     let data = buffer.read(size);
 
     // return the data
-    return { export: { type: this.type, data } };
+    return { export: { type: 'TBin', data } };
   }
 
   write(
     buffer: BufferWriter,
-    content: { data: Uint8Array },
+    content: TBin,
     resolver?: ReaderResolver | null,
   ) {
     this.writeIndex(buffer, resolver);
