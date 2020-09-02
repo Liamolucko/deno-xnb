@@ -1,4 +1,4 @@
-import * as dxt from "/home/liam/repos/deno-dxt/mod.ts";
+import * as dxt from "https://denopkg.com/Liamolucko/deno-dxt/mod.ts";
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import XnbError from "../../error.ts";
 import log from "../../log.ts";
