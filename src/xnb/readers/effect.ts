@@ -16,7 +16,7 @@ class EffectReader extends BaseReader {
     const size = uint32Reader.read(buffer);
     const bytecode = buffer.read(size);
 
-    return { export: { type: 'Effect', data: bytecode } };
+    return { export: { type: "Effect", data: bytecode } };
   }
 
   /**

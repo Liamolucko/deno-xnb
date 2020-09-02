@@ -42,7 +42,7 @@
  *
  */
 
-import * as Log from "./log.ts";
+import log from "./log.ts";
 import { BufferReader } from "./buffers.ts";
 import XnbError from "./error.ts";
 
@@ -137,10 +137,10 @@ class Lzx {
       }
     }
 
-    Log.debug(`Extra Bits:`);
-    Log.debug(JSON.stringify(extra_bits));
-    Log.debug(`Position Base:`);
-    Log.debug(JSON.stringify(position_base));
+    log.debug(`Extra Bits:`);
+    log.debug(JSON.stringify(extra_bits));
+    log.debug(`Position Base:`);
+    log.debug(JSON.stringify(position_base));
 
     /**
      * calculate required position slots
@@ -197,7 +197,7 @@ class Lzx {
       // read the intel call
       const intel = buffer.readLZXBits(1);
 
-      Log.debug(`Intel: ${Log.b(intel, 1)} = ${intel}`);
+      log.debug(`Intel: ${log.b(intel, 1)} = ${intel}`);
 
       // don't care about intel e8
       if (intel != 0) {
@@ -218,8 +218,8 @@ class Lzx {
         // read in the block type
         this.block_type = buffer.readLZXBits(3);
 
-        Log.debug(
-          `Blocktype: ${Log.b(this.block_type, 3)} = ${this.block_type}`,
+        log.debug(
+          `Blocktype: ${log.b(this.block_type, 3)} = ${this.block_type}`,
         );
 
         // read 24-bit value for uncompressed bytes in this block
@@ -228,7 +228,7 @@ class Lzx {
         // number of uncompressed bytes for this block left
         this.block_remaining = (hi << 8) | lo;
 
-        Log.debug(`Block Remaining: ${this.block_remaining}`);
+        log.debug(`Block Remaining: ${this.block_remaining}`);
 
         // switch over the valid block types
         switch (this.block_type) {
@@ -665,12 +665,12 @@ class Lzx {
           let leaf = pos;
           // if the position has gone past the table mask then we're overrun
           if ((pos += bit_mask) > table_mask) {
-            Log.debug(length[symbol].toString());
-            Log.debug(
+            log.debug(length[symbol].toString());
+            log.debug(
               `pos: ${pos}, bit_mask: ${bit_mask}, table_mask: ${table_mask}`,
             );
-            Log.debug(`bit_num: ${bit_num}, bits: ${bits}`);
-            Log.debug(`symbol: ${symbol}, symbols: ${symbols}`);
+            log.debug(`bit_num: ${bit_num}, bits: ${bits}`);
+            log.debug(`symbol: ${symbol}, symbols: ${symbols}`);
             throw new XnbError("Overrun table!");
           }
           // fill all possible lookups of this symbol with the symbol itself

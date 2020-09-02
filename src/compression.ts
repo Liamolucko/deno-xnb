@@ -1,5 +1,5 @@
 import { BufferReader } from "./buffers.ts";
-import * as Log from "./log.ts";
+import log from "./log.ts";
 import Lzx from "./lzx.ts";
 import XnbError from "./error.ts";
 
@@ -59,7 +59,7 @@ export function decompress(
       throw new XnbError("Invalid size read in compression content.");
     }
 
-    Log.debug(`Block Size: ${blockSize}, Frame Size: ${frameSize}`);
+    log.debug(`Block Size: ${blockSize}, Frame Size: ${frameSize}`);
 
     // decompress the file based on frame and block size
     decompressed = decompressed.concat(
@@ -71,7 +71,7 @@ export function decompress(
   }
 
   // we have finished decompressing the file
-  Log.info("File has been successfully decompressed!");
+  log.info("File has been successfully decompressed!");
 
   // return a decompressed buffer
   return Uint8Array.from(decompressed);

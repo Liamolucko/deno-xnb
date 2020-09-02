@@ -1,14 +1,14 @@
 import * as dxt from "/home/liam/repos/deno-dxt/mod.ts";
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import XnbError from "../../error.ts";
-import * as Log from "../../log.ts";
+import log from "../../log.ts";
 import ReaderResolver from "../reader-resolver.ts";
 import BaseReader from "./base.ts";
 import Int32Reader from "./int32.ts";
 import UInt32Reader from "./uint32.ts";
 
 export interface Texture2D {
-  type: 'Texture2D';
+  type: "Texture2D";
   data: Uint8Array;
   width: number;
   height: number;
@@ -32,7 +32,7 @@ class Texture2DReader extends BaseReader<Texture2DExport> {
     let mipCount = uint32Reader.read(buffer);
 
     if (mipCount > 1) {
-      Log.warn(`Found mipcount of ${mipCount}, only the first will be used.`);
+      log.warn(`Found mipcount of ${mipCount}, only the first will be used.`);
     }
 
     let dataSize = uint32Reader.read(buffer);
@@ -64,7 +64,7 @@ class Texture2DReader extends BaseReader<Texture2DExport> {
     return {
       format,
       export: {
-        type: 'Texture2D',
+        type: "Texture2D",
         data,
         width,
         height,
@@ -86,8 +86,8 @@ class Texture2DReader extends BaseReader<Texture2DExport> {
     const width = content.export.width;
     const height = content.export.height;
 
-    Log.debug(`Width: ${width}, Height: ${height}`);
-    Log.debug(`Format: ${content.format}`);
+    log.debug(`Width: ${width}, Height: ${height}`);
+    log.debug(`Format: ${content.format}`);
 
     int32Reader.write(buffer, content.format, null);
     uint32Reader.write(buffer, content.export.width, null);

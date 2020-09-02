@@ -1,10 +1,10 @@
-// @deno-types="./upng.d.ts"
-import upng from "https://cdn.skypack.dev/upng-js";
-import { exists } from "https://deno.land/std@0.66.0/fs/exists.ts";
-import { readJson } from "https://deno.land/std@0.66.0/fs/read_json.ts";
-import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
+// @deno-types="./fast-png.d.ts"
+import * as png from "https://cdn.skypack.dev/fast-png";
+import { exists } from "https://deno.land/std@0.67.0/fs/exists.ts";
+import { readJson } from "https://deno.land/std@0.67.0/fs/read_json.ts";
+import * as path from "https://deno.land/std@0.67.0/path/mod.ts";
 import XnbError from "./error.ts";
-import * as Log from "./log.ts";
+import log from "./log.ts";
 import { XnbJson } from "./pack.ts";
 import { BmFont } from "./xnb/readers/bm-font.ts";
 import { Effect } from "./xnb/readers/effect.ts";
@@ -21,8 +21,8 @@ function getNestedValue(obj: Record<string, any>, keys: string[]): any | null {
   return val;
 }
 
-/** Used to save a parsed XNB file. */
-export async function exportFile(
+/** Saves a parsed XNB file and its exports. */
+export async function saveXnb(
   filename: string,
   xnbObject: { content: Record<string, any> },
 ) {
@@ -61,7 +61,7 @@ export async function exportFile(
     }
 
     // log that we are exporting additional data
-    Log.info(`Exporting ${exported.type} ...`);
+    log.info(`Exporting ${exported.type} ...`);
 
     // set buffer by default
     let buffer = exported.data;
@@ -78,12 +78,7 @@ export async function exportFile(
     switch (exported.type) {
       // Texture2D to PNG
       case "Texture2D":
-        buffer = new Uint8Array(upng.encode(
-          [exported.data.buffer],
-          exported.width,
-          exported.height,
-          0,
-        ));
+        buffer = png.encode(exported);
 
         extension = "png";
         break;
@@ -136,8 +131,8 @@ export async function exportFile(
   return true;
 }
 
-/** Resolves all exported content back into the object */
-export async function resolveExports(filename: string): Promise<XnbJson> {
+/** Reads an unpacked XNB file and its exports into parsed XNB. */
+export async function readXnb(filename: string): Promise<XnbJson> {
   // get the directory name
   const dirname = path.dirname(filename);
 
@@ -173,7 +168,7 @@ export async function resolveExports(filename: string): Promise<XnbJson> {
     const exportedPath = path.join(dirname, exported);
     // load in the exported file
     const exportedFile = await Deno.readFile(exportedPath);
-    // get the extention of the file
+    // get the extension of the file
     const ext = path.extname(exportedPath);
 
     // switch over supported file extension types
@@ -181,12 +176,12 @@ export async function resolveExports(filename: string): Promise<XnbJson> {
       // Texture2D to PNG
       case ".png":
         // get the png data
-        const png = upng.decode(exportedFile);
+        const decoded = png.decode(exportedFile);
         // change the exported contents
         const data = {
-          data: png.data,
-          width: png.width,
-          height: png.height,
+          data: decoded.data,
+          width: decoded.width,
+          height: decoded.height,
         };
 
         if (keyPath.length) {
@@ -219,7 +214,7 @@ export async function resolveExports(filename: string): Promise<XnbJson> {
       case ".xml":
         json.content = {
           type: "BmFont",
-          data: exportedFile.toString(),
+          data: new TextDecoder().decode(exportedFile),
         };
         break;
     }

@@ -14,7 +14,7 @@ class BmFontReader extends BaseReader {
   read(buffer: BufferReader): { export: BmFont } {
     const stringReader = new StringReader();
     const xml = stringReader.read(buffer);
-    return { export: { type: 'BmFont', data: xml } };
+    return { export: { type: "BmFont", data: xml } };
   }
 
   /** Writes BmFont into buffer. */

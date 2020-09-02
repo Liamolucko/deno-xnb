@@ -1,5 +1,5 @@
 import XnbError from "../error.ts";
-import * as Log from "../log.ts";
+import log from "../log.ts";
 import * as Readers from "./readers.ts";
 import BaseReader from "./readers/base.ts";
 
@@ -12,7 +12,7 @@ export function simplifyType(type: string): string {
   // gets the first part of the type
   let simple = type.split(/`|,/)[0];
 
-  Log.debug(`Type: ${simple}`);
+  log.debug(`Type: ${simple}`);
 
   // check if its an array or not
   let isArray = simple.endsWith("[]");

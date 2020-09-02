@@ -3,7 +3,7 @@ import {
   bgMagenta,
   black,
   gray,
-} from "https://deno.land/std@0.66.0/fmt/colors.ts";
+} from "https://deno.land/std@0.67.0/fmt/colors.ts";
 import XnbError from "./error.ts";
 
 export class BufferReader {
@@ -498,7 +498,10 @@ export class BufferWriter {
    */
   alloc(bytes: number) {
     if (this.buffer.length <= this.bytePosition + bytes) {
-      const tempBuffer = new Uint8Array(this.bytePosition + bytes);
+      // I think this should probably be `this.bytePosition + bytes`,
+      // but this way makes it work. I feel like it might be hiding
+      // some underlying problem.
+      const tempBuffer = new Uint8Array(this.buffer.length + bytes);
       tempBuffer.set(this.buffer);
       this.#buffer = tempBuffer;
       this.dataView = new DataView(this.buffer.buffer);
@@ -613,9 +616,9 @@ export class BufferWriter {
   write7BitNumber(number: number) {
     this.alloc(2);
     do {
-      let byte = number & 0x7F;
-      number = number >> 7;
-      if (number) byte |= 0x80;
+      let byte = number & 0b01111111;
+      number >>= 7;
+      if (number) byte |= 0b10000000;
       this.dataView.setUint8(this.bytePosition, byte);
       this.bytePosition++;
     } while (number);

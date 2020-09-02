@@ -1,5 +1,4 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
-import XnbError from "../../error.ts";
 import ReaderResolver from "../reader-resolver.ts";
 
 /** Base class for all readers. */

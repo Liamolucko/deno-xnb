@@ -1,64 +1,52 @@
-import { bold, green, red } from "https://deno.land/std@0.66.0/fmt/colors.ts";
-import { exists } from "https://deno.land/std@0.66.0/fs/exists.ts";
-import { walk } from "https://deno.land/std@0.66.0/fs/walk.ts";
-import * as path from "https://deno.land/std@0.66.0/path/mod.ts";
-import Denomander from "https://deno.land/x/denomander@0.6.3/mod.ts";
+import { bold, green, red } from "https://deno.land/std@0.67.0/fmt/colors.ts";
+import { exists } from "https://deno.land/std@0.67.0/fs/exists.ts";
+import { walk } from "https://deno.land/std@0.67.0/fs/walk.ts";
+import * as path from "https://deno.land/std@0.67.0/path/mod.ts";
+import { Command } from "https://deno.land/x/cliffy@v0.13.0/command/mod.ts";
 import * as xnb from "./mod.ts";
-import { exportFile, resolveExports } from "./src/exports.ts";
-import * as Log from "./src/log.ts";
+import { readXnb, saveXnb } from "./src/export.ts";
+import log from "./src/log.ts";
 
 // used for displaying the tally of success and fail
-let success = 0;
-let fail = 0;
+let successes: string[] = [];
+let fails: Array<{ file: string; error?: any }> = [];
 
 // create the program and set version number
-const program = new Denomander({
-  app_name: "xnbcli",
-  app_description: "Packs and unpacks XNB files",
-  app_version: "1.0.6",
-});
+const cmd = new Command<{ debug: boolean; onlyErrors: boolean }>()
+  .name("xnbcli")
+  .version("1.0.6")
+  .description("Packs and unpacks XNB files");
 
-// turn on debug printing
-program.option("-d --debug", "Enables debug verbose printing.", () => {
-  Log.setMode(Log.DEBUG, true);
-});
+cmd.option(
+  "--debug",
+  "Enable verbose debug printing.",
+  { global: true, conflicts: ["only-errors"] },
+);
 
-// only display errors
-program.option("-e --errors", "Only prints error messages.", () => {
-  Log.setMode(Log.INFO | Log.WARN | Log.DEBUG, false);
-});
+cmd.option(
+  "--only-errors",
+  "Only print error messages.",
+  { global: true },
+);
 
 // XNB unpack command
-program
-  .command("unpack [input] [output?]")
-  .action(({ input, output }: Record<string, string>) => {
+cmd
+  .command("unpack <input:string> [output:string]", "Used to unpack XNB files.")
+  .action((options, input: string, output: string) => {
     // process the unpack
-    processFiles(unpackFile, input, output, details);
-  })
-  .description("Used to unpack XNB files.");
+    main(input, output, unpackFile, options);
+  });
 
 // XNB pack Command
-program
-  .command("pack [input] [output?]")
-  .action(({ input, output }: Record<string, string>) => {
+cmd
+  .command("pack <input:string> [output:string]", "Used to pack XNB files.")
+  .action((options, input: string, output: string) => {
     // process the pack
-    processFiles(packFile, input, output, details);
-  })
-  .description("Used to pack XNB files.");
+    main(input, output, packFile, options);
+  });
 
 if (import.meta.main) {
-  // Enable logger
-  Log.setMode(Log.INFO | Log.WARN | Log.ERROR, true);
-
-  // parse the input and run the commander program
-  program.parse(Deno.args);
-}
-
-/** Display the results of the processing */
-function details() {
-  // give a final analysis of the files
-  console.log(`${bold(green("Success"))} ${success}`);
-  console.log(`${bold(red("Fail"))} ${fail}`);
+  cmd.parse(Deno.args);
 }
 
 /** 
@@ -75,25 +63,25 @@ async function unpackFile(input: string, output: string) {
     }
 
     // load the XNB and get the object from it
-    Log.info(`Reading file "${input}"...`);
+    log.info(`Reading file "${input}"...`);
     const result = xnb.unpack(await Deno.readFile(input));
 
     // save the file
-    if (!await exportFile(output, result)) {
-      Log.error(`File ${output} failed to save!`);
-      return fail++;
+    if (!await saveXnb(output, result)) {
+      log.error(`File ${output} failed to save!`);
+      return fails.push({ file: input });
     }
 
     // log that the file was saved
-    Log.info(`Output file saved: ${output}`);
+    log.info(`Output file saved: ${output}`);
 
     // increase success count
-    success++;
+    successes.push(input);
   } catch (ex) {
     // log out the error
-    Log.error(`Filename: ${input}\n${ex.stack}\n`);
+    log.error(`Filename: ${input}\n${ex.stack}\n`);
     // increase fail count
-    fail++;
+    fails.push({ file: input, error: ex });
   }
 }
 
@@ -109,10 +97,10 @@ async function packFile(input: string, output: string) {
       return;
     }
 
-    Log.info(`Reading file "${input}" ...`);
+    log.info(`Reading file "${input}" ...`);
 
     // resolve the imports
-    const json = await resolveExports(input);
+    const json = await readXnb(input);
     // convert the JSON to XNB
     const buffer = xnb.pack(json);
 
@@ -120,25 +108,30 @@ async function packFile(input: string, output: string) {
     await Deno.writeFile(output, buffer);
 
     // log that the file was saved
-    Log.info(`Output file saved: ${output}`);
+    log.info(`Output file saved: ${output}`);
 
     // increase success count
-    success++;
+    successes.push(input);
   } catch (ex) {
     // log out the error
-    Log.error(`Filename: ${input}\n${ex.stack}\n`);
+    log.error(`Filename: ${input}\n${ex.stack}\n`);
     // increase fail count
-    fail++;
+    fails.push({ file: input, error: ex });
   }
 }
 
-/** Used to walk a path with input/output for processing */
-async function processFiles(
-  handler: (input: string, output: string) => any,
+async function main(
   input: string,
   output: string,
-  doneCallback: () => any,
+  handler: (input: string, output: string) => any,
+  options: { debug: boolean; onlyErrors: boolean },
 ) {
+  // Configure logger
+  log.showInfo = !options.onlyErrors;
+  log.showWarnings = !options.onlyErrors;
+  log.showErrors = true;
+  log.showDebug = options.debug;
+
   // if this isn't a directory then just run the function
   if (!(await Deno.stat(input)).isDirectory) {
     // get the extension from the original path name
@@ -196,10 +189,18 @@ async function processFiles(
       // run the function
       await handler(inputFile, outputFile);
     }
-
-    // The original ignored errors, but I'm not sure how to do that here.
   }
 
-  // done walking the dog
-  doneCallback();
+  // give a final analysis of the files
+  console.log(`${bold(green("Success"))} ${successes.length}`);
+  console.log(`${bold(red("Fail"))} ${fails.length}`);
+
+  // This is pretty useful for debugging so I won't remove it just yet.
+  // Deno.writeTextFileSync(
+  //   "./errors.md",
+  //   fails.map((fail) =>
+  //     `- **${fail.file}**` +
+  //     (typeof fail.error === "undefined" ? "" : `: ${fail.error}`)
+  //   ).join("\n"),
+  // );
 }

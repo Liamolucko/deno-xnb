@@ -19,7 +19,7 @@ class TBinReader extends BaseReader {
     let data = buffer.read(size);
 
     // return the data
-    return { export: { type: 'TBin', data } };
+    return { export: { type: "TBin", data } };
   }
 
   write(

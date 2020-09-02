@@ -1,8 +1,8 @@
 import * as lz4 from "https://deno.land/x/lz4@v0.1.2/mod.ts";
 import { BufferReader, BufferWriter } from "./buffers.ts";
-import * as Presser from "./compression.ts";
+import * as presser from "./compression.ts";
 import XnbError from "./error.ts";
-import * as Log from "./log.ts";
+import log from "./log.ts";
 import { BaseReader, StringReader } from "./xnb/readers.ts";
 import ReaderResolver from "./xnb/reader-resolver.ts";
 import { getReader, simplifyType } from "./xnb/resolve-types.ts";
@@ -40,7 +40,7 @@ export function unpack(file: Uint8Array): XnbJson {
     parseHeader(buffer);
 
   // we validated the file successfully
-  Log.info("XNB file validated successfully!");
+  log.info("XNB file validated successfully!");
 
   // read the file size
   const fileSize = buffer.readUInt32();
@@ -51,20 +51,20 @@ export function unpack(file: Uint8Array): XnbJson {
   }
 
   // print out the file size
-  Log.debug(`File size: ${fileSize} bytes.`);
+  log.debug(`File size: ${fileSize} bytes.`);
 
   // if the file is compressed then we need to decompress it
   if (compressed) {
     // get the decompressed size
     const decompressedSize = buffer.readUInt32();
-    Log.debug(`Uncompressed size: ${decompressedSize} bytes.`);
+    log.debug(`Uncompressed size: ${decompressedSize} bytes.`);
 
     // decompress LZX format
     if (compressionType == COMPRESSED_LZX_MASK) {
       // get the amount of data to compress
       const compressedTodo = fileSize - XNB_COMPRESSED_PROLOGUE_SIZE;
       // decompress the buffer based on the file size
-      const decompressed = Presser.decompress(buffer, compressedTodo);
+      const decompressed = presser.decompress(buffer, compressedTodo);
       // copy the decompressed buffer into the file buffer
       buffer.copyFrom(
         decompressed,
@@ -92,14 +92,14 @@ export function unpack(file: Uint8Array): XnbJson {
     }
   }
 
-  Log.debug(`Reading from byte position: ${buffer.bytePosition}`);
+  log.debug(`Reading from byte position: ${buffer.bytePosition}`);
 
   // NOTE: assuming the buffer is now decompressed
 
   // get the 7-bit value for readers
   let count = buffer.read7BitNumber();
   // log how many readers there are
-  Log.debug(`Readers: ${count}`);
+  log.debug(`Readers: ${count}`);
 
   // create an instance of string reader
   const stringReader = new StringReader();
@@ -129,7 +129,7 @@ export function unpack(file: Uint8Array): XnbJson {
   const shared = buffer.read7BitNumber();
 
   // log the shared resources count
-  Log.debug(`Shared Resources: ${shared}`);
+  log.debug(`Shared Resources: ${shared}`);
 
   // don't accept shared resources since SDV XNB files don't have any
   if (shared != 0) {
@@ -142,7 +142,7 @@ export function unpack(file: Uint8Array): XnbJson {
   const result = content.read(buffer);
 
   // we loaded the XNB file successfully
-  Log.info("Successfuly read XNB file!");
+  log.info("Successfuly read XNB file!");
 
   // return the loaded XNB object
   return {
@@ -268,7 +268,7 @@ function parseHeader(buffer: BufferReader) {
   }
 
   // debug print that valid XNB magic was found
-  Log.debug("Valid XNB magic found!");
+  log.debug("Valid XNB magic found!");
 
   // load the target platform
   const target = buffer.readString(1).toLowerCase();
@@ -276,22 +276,22 @@ function parseHeader(buffer: BufferReader) {
   // read the target platform
   switch (target) {
     case "w":
-      Log.debug("Target platform: Microsoft Windows");
+      log.debug("Target platform: Microsoft Windows");
       break;
     case "m":
-      Log.debug("Target platform: Windows Phone 7");
+      log.debug("Target platform: Windows Phone 7");
       break;
     case "x":
-      Log.debug("Target platform: Xbox 360");
+      log.debug("Target platform: Xbox 360");
       break;
     case "a":
-      Log.debug("Target platform: Android");
+      log.debug("Target platform: Android");
       break;
     case "i":
-      Log.debug("Target platform: iOS");
+      log.debug("Target platform: iOS");
       break;
     default:
-      Log.warn(`Invalid target platform "${target}" found.`);
+      log.warn(`Invalid target platform "${target}" found.`);
       break;
   }
 
@@ -301,16 +301,16 @@ function parseHeader(buffer: BufferReader) {
   // read the XNB format version
   switch (formatVersion) {
     case 0x3:
-      Log.debug("XNB Format Version: XNA Game Studio 3.0");
+      log.debug("XNB Format Version: XNA Game Studio 3.0");
       break;
     case 0x4:
-      Log.debug("XNB Format Version: XNA Game Studio 3.1");
+      log.debug("XNB Format Version: XNA Game Studio 3.1");
       break;
     case 0x5:
-      Log.debug("XNB Format Version: XNA Game Studio 4.0");
+      log.debug("XNB Format Version: XNA Game Studio 4.0");
       break;
     default:
-      Log.warn(`XNB Format Version ${Log.h(formatVersion)} unknown.`);
+      log.warn(`XNB Format Version ${log.h(formatVersion)} unknown.`);
       break;
   }
 
@@ -327,9 +327,9 @@ function parseHeader(buffer: BufferReader) {
     ? COMPRESSED_LZX_MASK
     : ((flags & COMPRESSED_LZ4_MASK) ? COMPRESSED_LZ4_MASK : 0);
   // debug content information
-  Log.debug(`Content: ${(hidef ? "HiDef" : "Reach")}`);
+  log.debug(`Content: ${(hidef ? "HiDef" : "Reach")}`);
   // log compressed state
-  Log.debug(
+  log.debug(
     `Compressed: ${compressed}, ${
       compressionType == COMPRESSED_LZX_MASK ? "LZX" : "LZ4"
     }`,
