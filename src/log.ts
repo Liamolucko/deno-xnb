@@ -15,9 +15,9 @@ export default {
   showDebug: false,
 
   /**
- * Displays an info message
- * @param message Message to display to the console as info.
- */
+   * Displays an info message
+   * @param message Message to display to the console as info.
+   */
   info(message: string = "") {
     if (this.showInfo) {
       console.log(bold(blue("[INFO] ")) + message);
@@ -25,9 +25,9 @@ export default {
   },
 
   /**
- * Displays a debug message
- * @param message Message to display to the console if debug is enabled.
- */
+   * Displays a debug message
+   * @param message Message to display to the console if debug is enabled.
+   */
   debug(message: string = "") {
     if (this.showDebug) {
       console.log(bold(magenta("[DEBUG] ")) + message);
@@ -35,9 +35,9 @@ export default {
   },
 
   /**
- * Displays a warning message
- * @param message Message to display to the console as a warning.
- */
+   * Displays a warning message
+   * @param message Message to display to the console as a warning.
+   */
   warn(message: string = "") {
     if (this.showWarnings) {
       console.log(bold(yellow("[WARN] ")) + message);
@@ -45,9 +45,9 @@ export default {
   },
 
   /**
- * Displays an error message
- * @param message Message to display to the console as an error.
- */
+   * Displays an error message
+   * @param message Message to display to the console as an error.
+   */
   error(message: string = "") {
     if (this.showErrors) {
       console.log(bold(red("[ERROR] ")) + message);

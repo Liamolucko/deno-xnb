@@ -3,7 +3,6 @@ import { BufferReader, BufferWriter } from "../../buffers.ts";
 import XnbError from "../../error.ts";
 import log from "../../log.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
 import Int32Reader from "./int32.ts";
 import UInt32Reader from "./uint32.ts";
 
@@ -19,23 +18,19 @@ export interface Texture2DExport {
   export: Texture2D;
 }
 
-/** Texture2D Reader */
-class Texture2DReader extends BaseReader<Texture2DExport> {
+export default {
   /** Reads Texture2D from buffer. */
   read(buffer: BufferReader): Texture2DExport {
-    const int32Reader = new Int32Reader();
-    const uint32Reader = new UInt32Reader();
-
-    let format = int32Reader.read(buffer);
-    let width = uint32Reader.read(buffer);
-    let height = uint32Reader.read(buffer);
-    let mipCount = uint32Reader.read(buffer);
+    let format = Int32Reader.read(buffer);
+    let width = UInt32Reader.read(buffer);
+    let height = UInt32Reader.read(buffer);
+    let mipCount = UInt32Reader.read(buffer);
 
     if (mipCount > 1) {
       log.warn(`Found mipcount of ${mipCount}, only the first will be used.`);
     }
 
-    let dataSize = uint32Reader.read(buffer);
+    let dataSize = UInt32Reader.read(buffer);
     let data = buffer.read(dataSize);
 
     if (format == 4) {
@@ -70,7 +65,7 @@ class Texture2DReader extends BaseReader<Texture2DExport> {
         height,
       },
     };
-  }
+  },
 
   /** Writes Texture2D into the buffer */
   write(
@@ -78,10 +73,7 @@ class Texture2DReader extends BaseReader<Texture2DExport> {
     content: Texture2DExport,
     resolver?: ReaderResolver | null,
   ) {
-    const int32Reader = new Int32Reader();
-    const uint32Reader = new UInt32Reader();
-
-    this.writeIndex(buffer, resolver);
+    resolver?.writeIndex(buffer, this);
 
     const width = content.export.width;
     const height = content.export.height;
@@ -89,10 +81,10 @@ class Texture2DReader extends BaseReader<Texture2DExport> {
     log.debug(`Width: ${width}, Height: ${height}`);
     log.debug(`Format: ${content.format}`);
 
-    int32Reader.write(buffer, content.format, null);
-    uint32Reader.write(buffer, content.export.width, null);
-    uint32Reader.write(buffer, content.export.height, null);
-    uint32Reader.write(buffer, 1, null);
+    Int32Reader.write(buffer, content.format, null);
+    UInt32Reader.write(buffer, content.export.width, null);
+    UInt32Reader.write(buffer, content.export.height, null);
+    UInt32Reader.write(buffer, 1, null);
 
     let data = content.export.data;
 
@@ -111,13 +103,15 @@ class Texture2DReader extends BaseReader<Texture2DExport> {
       data = dxt.compress(data, width, height, dxt.flags.DXT5);
     }
 
-    uint32Reader.write(buffer, data.length, null);
+    UInt32Reader.write(buffer, data.length, null);
     buffer.concat(data);
-  }
+  },
 
-  isValueType() {
+  get type() {
+    return "Texture2D";
+  },
+
+  get primitive() {
     return false;
-  }
-}
-
-export default Texture2DReader;
+  },
+};

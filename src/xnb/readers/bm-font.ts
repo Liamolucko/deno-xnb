@@ -1,6 +1,5 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
 import StringReader from "./string.ts";
 
 export interface BmFont {
@@ -8,14 +7,12 @@ export interface BmFont {
   data: string;
 }
 
-/** BmFont Reader */
-class BmFontReader extends BaseReader {
+export default {
   /** Reads BmFont from buffer. */
   read(buffer: BufferReader): { export: BmFont } {
-    const stringReader = new StringReader();
-    const xml = stringReader.read(buffer);
+    const xml = StringReader.read(buffer);
     return { export: { type: "BmFont", data: xml } };
-  }
+  },
 
   /** Writes BmFont into buffer. */
   write(
@@ -24,14 +21,15 @@ class BmFontReader extends BaseReader {
     resolver?: ReaderResolver | null,
   ) {
     // write index of reader
-    this.writeIndex(buffer, resolver);
-    const stringReader = new StringReader();
-    stringReader.write(buffer, content.data, null);
-  }
+    resolver?.writeIndex(buffer, this);
+    StringReader.write(buffer, content.data, null);
+  },
 
-  isValueType() {
+  get primitive() {
     return false;
-  }
-}
+  },
 
-export default BmFontReader;
+  get type() {
+    return "BmFont";
+  },
+};

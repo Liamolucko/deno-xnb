@@ -1,6 +1,5 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
 import Int32Reader from "./int32.ts";
 
 export interface Rectangle {
@@ -10,19 +9,16 @@ export interface Rectangle {
   height: number;
 }
 
-/** Rectangle Reader */
-class RectangleReader extends BaseReader<Rectangle> {
+export default {
   /** Reads Rectangle from buffer. */
   read(buffer: BufferReader): Rectangle {
-    const int32Reader = new Int32Reader();
-
-    const x = int32Reader.read(buffer);
-    const y = int32Reader.read(buffer);
-    const width = int32Reader.read(buffer);
-    const height = int32Reader.read(buffer);
+    const x = Int32Reader.read(buffer);
+    const y = Int32Reader.read(buffer);
+    const width = Int32Reader.read(buffer);
+    const height = Int32Reader.read(buffer);
 
     return { x, y, width, height };
-  }
+  },
 
   /**
    * Writes Effects into the buffer
@@ -35,13 +31,18 @@ class RectangleReader extends BaseReader<Rectangle> {
     content: Rectangle,
     resolver: ReaderResolver,
   ) {
-    this.writeIndex(buffer, resolver);
-    const int32Reader = new Int32Reader();
-    int32Reader.write(buffer, content.x, null);
-    int32Reader.write(buffer, content.y, null);
-    int32Reader.write(buffer, content.width, null);
-    int32Reader.write(buffer, content.height, null);
-  }
-}
+    resolver?.writeIndex(buffer, this);
+    Int32Reader.write(buffer, content.x, null);
+    Int32Reader.write(buffer, content.y, null);
+    Int32Reader.write(buffer, content.width, null);
+    Int32Reader.write(buffer, content.height, null);
+  },
 
-export default RectangleReader;
+  get type() {
+    return "Rectangle";
+  },
+
+  get primitive() {
+    return true;
+  },
+};

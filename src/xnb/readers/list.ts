@@ -1,15 +1,11 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
+import { Reader } from "../readers.ts";
 import UInt32Reader from "./uint32.ts";
 
 /** List Reader */
-class ListReader<T = any> extends BaseReader<T[]> {
-  reader: BaseReader<T>;
-  constructor(reader: BaseReader<T>) {
-    super();
-    this.reader = reader;
-  }
+class ListReader<T = any> implements Reader<T[]> {
+  constructor(private reader: Reader<T>) {}
 
   /**
    * Reads List from buffer.
@@ -17,12 +13,11 @@ class ListReader<T = any> extends BaseReader<T[]> {
    * @param resolver
    */
   read(buffer: BufferReader, resolver: ReaderResolver): T[] {
-    const uint32Reader = new UInt32Reader();
-    const size = uint32Reader.read(buffer);
+    const size = UInt32Reader.read(buffer);
 
     const list = [];
     for (let i = 0; i < size; i++) {
-      const value = this.reader.isValueType()
+      const value = this.reader.primitive
         ? this.reader.read(buffer)
         : resolver.read(buffer);
       list.push(value);
@@ -41,20 +36,23 @@ class ListReader<T = any> extends BaseReader<T[]> {
     content: T[],
     resolver?: ReaderResolver | null,
   ) {
-    this.writeIndex(buffer, resolver);
-    const uint32Reader = new UInt32Reader();
-    uint32Reader.write(buffer, content.length, null);
+    resolver?.writeIndex(buffer, this);
+    UInt32Reader.write(buffer, content.length, null);
     for (let i in content) {
       this.reader.write(
         buffer,
         content[i],
-        (this.reader.isValueType() ? null : resolver),
+        (this.reader.primitive ? null : resolver),
       );
     }
   }
 
   get type() {
     return `List<${this.reader.type}>`;
+  }
+
+  get primitive() {
+    return true;
   }
 }
 

@@ -1,13 +1,11 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
 
-/** Double Reader */
-class DoubleReader extends BaseReader {
+export default {
   /** Reads Double from buffer. */
   read(buffer: BufferReader): number {
     return buffer.readDouble();
-  }
+  },
 
   /** Writes Double into buffer */
   write(
@@ -15,8 +13,15 @@ class DoubleReader extends BaseReader {
     content: number,
     resolver?: ReaderResolver | null,
   ) {
-    this.writeIndex(buffer, resolver);
-  }
-}
+    resolver?.writeIndex(buffer, this);
+    buffer.writeSingle(content);
+  },
 
-export default DoubleReader;
+  get type() {
+    return "Single";
+  },
+
+  get primitive() {
+    return true;
+  },
+};

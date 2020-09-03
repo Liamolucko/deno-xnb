@@ -1,7 +1,10 @@
 import XnbError from "../error.ts";
 import log from "../log.ts";
-import * as Readers from "./readers.ts";
-import BaseReader from "./readers/base.ts";
+import { readers, Reader } from "./readers.ts";
+import ArrayReader from "./readers/array.ts";
+import DictionaryReader from "./readers/dictionary.ts";
+import ListReader from "./readers/list.ts";
+import NullableReader from "./readers/nullable.ts";
 
 /**
  * Used to simplify type from XNB file.
@@ -174,23 +177,26 @@ export function getTypeInfo(
  * @param type The simplified type to get reader based off of.
  * @returns An instance of BaseReader for given type.
  */
-export function getReader(type: string): BaseReader {
+export function getReader(type: string): Reader {
   // get type info for complex types
   const info = getTypeInfo(type);
   // loop over subtypes and resolve readers for them
   const subtypes = info.subtypes.map(getReader);
 
-  // @ts-ignore if we have a reader then use one
-  if (typeof Readers[`${info.type}Reader`] !== "undefined") {
-    // @ts-ignore
-    return new (Readers[`${info.type}Reader`])(
-      subtypes[0],
-      subtypes[1],
+  if (info.type === "Array") {
+    return new ArrayReader(subtypes[0]);
+  } else if (info.type === "List") {
+    return new ListReader(subtypes[0]);
+  } else if (info.type === "Nullable") {
+    return new NullableReader(subtypes[0]);
+  } else if (info.type === "Dictionary") {
+    return new DictionaryReader(subtypes[0], subtypes[1]);
+  } else if (readers.has(`${info.type}Reader`)) {
+    return readers.get(`${info.type}Reader`)!;
+  } else {
+    // throw an error as type is not supported
+    throw new XnbError(
+      `Invalid reader type "${type}" passed, unable to resolve!`,
     );
   }
-
-  // throw an error as type is not supported
-  throw new XnbError(
-    `Invalid reader type "${type}" passed, unable to resolve!`,
-  );
 }

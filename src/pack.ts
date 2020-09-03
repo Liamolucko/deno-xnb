@@ -3,9 +3,10 @@ import { BufferReader, BufferWriter } from "./buffers.ts";
 import * as presser from "./compression.ts";
 import XnbError from "./error.ts";
 import log from "./log.ts";
-import { BaseReader, StringReader } from "./xnb/readers.ts";
 import ReaderResolver from "./xnb/reader-resolver.ts";
 import { getReader, simplifyType } from "./xnb/resolve-types.ts";
+import { Reader } from "./xnb/readers.ts";
+import StringReader from "./xnb/readers/string.ts";
 
 // constants
 const HIDEF_MASK = 0x1;
@@ -101,17 +102,14 @@ export function unpack(file: Uint8Array): XnbJson {
   // log how many readers there are
   log.debug(`Readers: ${count}`);
 
-  // create an instance of string reader
-  const stringReader = new StringReader();
-
   // a local copy of readers for the export
   const readers: { type: string; version: number }[] = [];
 
   // loop over the number of readers we have
-  const loadedReaders: BaseReader[] = [];
+  const loadedReaders: Reader[] = [];
   for (let i = 0; i < count; i++) {
     // read the type
-    const type = stringReader.read(buffer);
+    const type = StringReader.read(buffer);
     // read the version
     const version = buffer.readInt32();
 
@@ -162,9 +160,6 @@ export function pack(json: XnbJson) {
   // the output buffer for this file
   const buffer = new BufferWriter();
 
-  // create an instance of string reader
-  const stringReader = new StringReader();
-
   // set the header information
   const target = json.header.target;
   const formatVersion = json.header.formatVersion;
@@ -198,7 +193,7 @@ export function pack(json: XnbJson) {
   const readers = [];
   for (let reader of json.readers) {
     readers.push(getReader(simplifyType(reader.type))); // simplify the type then get the reader of it
-    stringReader.write(buffer, reader.type, null);
+    StringReader.write(buffer, reader.type, null);
     buffer.writeUInt32(reader.version);
   }
 

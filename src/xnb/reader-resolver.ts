@@ -1,18 +1,14 @@
 import { BufferReader, BufferWriter } from "../buffers.ts";
 import XnbError from "../error.ts";
-import BaseReader from "./readers/base.ts";
+import { Reader } from "./readers.ts";
 
 /** Class used to read the XNB types using the readers */
 class ReaderResolver {
-  readers: BaseReader[];
   /**
    * Creating a new instance of ReaderResolver
    * @param readers Array of BaseReaders
    */
-  constructor(readers: BaseReader[]) {
-    /** Array of base readers */
-    this.readers = readers;
-  }
+  constructor(private readers: Reader[]) {}
 
   /**
    * Read the XNB file contents
@@ -41,12 +37,15 @@ class ReaderResolver {
    * Returns the index of the reader
    * @param reader
    */
-  getIndex(reader: BaseReader) {
-    for (let i in this.readers) {
-      if (reader.toString() == this.readers[i].toString()) {
-        return i;
-      }
-    }
+  getIndex(reader: Reader) {
+    return this.readers.findIndex((el) => reader.type === el.type);
+  }
+
+  writeIndex(
+    buffer: BufferWriter,
+    reader: Reader,
+  ) {
+    buffer.write7BitNumber(this.getIndex(reader) + 1);
   }
 }
 

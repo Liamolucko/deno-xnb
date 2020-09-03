@@ -14,7 +14,7 @@ let fails: Array<{ file: string; error?: any }> = [];
 // create the program and set version number
 const cmd = new Command<{ debug: boolean; onlyErrors: boolean }>()
   .name("xnbcli")
-  .version("1.0.6")
+  .version("1.0.0")
   .description("Packs and unpacks XNB files");
 
 cmd.option(

@@ -1,22 +1,26 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
 
-/** Single Reader */
-class SingleReader extends BaseReader<number> {
+export default {
   /** Reads Single from the buffer. */
   read(buffer: BufferReader): number {
     return buffer.readSingle();
-  }
+  },
 
   write(
     buffer: BufferWriter,
     content: number,
     resolver?: ReaderResolver | null,
   ) {
-    this.writeIndex(buffer, resolver);
+    resolver?.writeIndex(buffer, this);
     buffer.writeSingle(content);
-  }
-}
+  },
 
-export default SingleReader;
+  get type() {
+    return "Single";
+  },
+
+  get primitive() {
+    return true;
+  },
+};

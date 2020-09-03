@@ -1,17 +1,11 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
+import { Reader } from "../readers.ts";
 import BooleanReader from "./boolean.ts";
 
 /** Nullable Reader */
-class NullableReader<T = any> extends BaseReader<T | null> {
-  /** Nullable type */
-  reader: BaseReader<T>;
-
-  constructor(reader: BaseReader<T>) {
-    super();
-    this.reader = reader;
-  }
+class NullableReader<T = any> implements Reader<T | null> {
+  constructor(private reader: Reader<T>) {}
 
   /**
    * Reads Nullable type from buffer.
@@ -20,14 +14,12 @@ class NullableReader<T = any> extends BaseReader<T | null> {
    * @returns
    */
   read(buffer: BufferReader, resolver?: ReaderResolver | null): T | null {
-    // get an instance of boolean reader
-    const booleanReader = new BooleanReader();
     // read in if the nullable has a value or not
-    const hasValue = booleanReader.read(buffer);
+    const hasValue = BooleanReader.read(buffer);
 
     // return the value
     return (hasValue
-      ? (this.reader.isValueType()
+      ? (this.reader.primitive
         ? this.reader.read(buffer)
         : resolver?.read(buffer))
       : null);
@@ -44,24 +36,22 @@ class NullableReader<T = any> extends BaseReader<T | null> {
     content: T | null,
     resolver?: ReaderResolver | null,
   ) {
-    //this.writeIndex(buffer, resolver);
-    const booleanReader = new BooleanReader();
     buffer.writeByte(content != null ? 1 : 0);
     if (content != null) {
       this.reader.write(
         buffer,
         content,
-        (this.reader.isValueType() ? null : resolver),
+        (this.reader.primitive ? null : resolver),
       );
     }
   }
 
-  isValueType() {
-    return false;
-  }
-
   get type() {
     return `Nullable<${this.reader.type}>`;
+  }
+
+  get primitive() {
+    return false;
   }
 }
 

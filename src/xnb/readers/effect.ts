@@ -1,6 +1,5 @@
 import { BufferReader, BufferWriter } from "../../buffers.ts";
 import ReaderResolver from "../reader-resolver.ts";
-import BaseReader from "./base.ts";
 import UInt32Reader from "./uint32.ts";
 
 export interface Effect {
@@ -8,16 +7,13 @@ export interface Effect {
   data: Uint8Array;
 }
 
-/** Effect Reader */
-class EffectReader extends BaseReader {
+export default {
   read(buffer: BufferReader): { export: Effect } {
-    const uint32Reader = new UInt32Reader();
-
-    const size = uint32Reader.read(buffer);
+    const size = UInt32Reader.read(buffer);
     const bytecode = buffer.read(size);
 
     return { export: { type: "Effect", data: bytecode } };
-  }
+  },
 
   /**
    * Writes Effects into the buffer
@@ -27,20 +23,20 @@ class EffectReader extends BaseReader {
    */
   write(
     buffer: BufferWriter,
-    content: { data: Uint8Array },
+    content: Effect,
     resolver: ReaderResolver,
   ) {
-    this.writeIndex(buffer, resolver);
+    resolver?.writeIndex(buffer, this);
 
-    const uint32Reader = new UInt32Reader();
-
-    uint32Reader.write(buffer, content.data.length, null);
+    UInt32Reader.write(buffer, content.data.length, null);
     buffer.concat(content.data);
-  }
+  },
 
-  isValueType() {
+  get type() {
+    return "Effect";
+  },
+
+  get primitive() {
     return false;
-  }
-}
-
-export default EffectReader;
+  },
+};
