@@ -9,12 +9,12 @@ import log from "./src/log.ts";
 
 // used for displaying the tally of success and fail
 let successes: string[] = [];
-let fails: Array<{ file: string; error?: any }> = [];
+let fails: Array<{ file: string; error?: unknown }> = [];
 
 // create the program and set version number
 const cmd = new Command<{ debug: boolean; onlyErrors: boolean }>()
   .name("xnbcli")
-  .version("1.0.0")
+  .version("2.0.0")
   .description("Packs and unpacks XNB files");
 
 cmd.option(
@@ -123,7 +123,7 @@ async function packFile(input: string, output: string) {
 async function main(
   input: string,
   output: string,
-  handler: (input: string, output: string) => any,
+  handler: (input: string, output: string) => unknown,
   options: { debug: boolean; onlyErrors: boolean },
 ) {
   // Configure logger
@@ -196,11 +196,11 @@ async function main(
   console.log(`${bold(red("Fail"))} ${fails.length}`);
 
   // This is pretty useful for debugging so I won't remove it just yet.
-  // Deno.writeTextFileSync(
-  //   "./errors.md",
-  //   fails.map((fail) =>
-  //     `- **${fail.file}**` +
-  //     (typeof fail.error === "undefined" ? "" : `: ${fail.error}`)
-  //   ).join("\n"),
-  // );
+  Deno.writeTextFileSync(
+    "./errors.md",
+    fails.map((fail) =>
+      `- **${fail.file}**` +
+      (typeof fail.error === "undefined" ? "" : `: ${fail.error}`)
+    ).join("\n"),
+  );
 }

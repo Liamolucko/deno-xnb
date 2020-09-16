@@ -1,4 +1,5 @@
 // Manually bundled typedefs for fast-png, since none of the CDNs seem to manipulate typedefs right now.
+// deno-lint-ignore-file
 
 // @types/pako
 declare enum StrategyValues {
@@ -26,7 +27,7 @@ interface IOBufferOptions {
      */
   offset?: number;
 }
-export declare class IOBuffer {
+declare class IOBuffer {
   /**
      * Reference to the internal ArrayBuffer object.
      */

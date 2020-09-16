@@ -43,7 +43,7 @@
  */
 
 import log from "./log.ts";
-import { BufferReader } from "./buffers.ts";
+import { LzxBitReader } from "./binary.ts";
 import XnbError from "./error.ts";
 
 // LZX Constants
@@ -188,7 +188,7 @@ class Lzx {
 
   /** Decompress the buffer with given frame and block size. */
   decompress(
-    buffer: BufferReader,
+    buffer: LzxBitReader,
     frame_size: number,
     block_size: number,
   ): number[] {
@@ -232,6 +232,7 @@ class Lzx {
 
         // switch over the valid block types
         switch (this.block_type) {
+          // deno-lint-ignore no-fallthrough
           case BLOCKTYPE.ALIGNED:
             // aligned offset tree
             for (let i = 0; i < 8; i++) {
@@ -273,13 +274,12 @@ class Lzx {
             // align the bit buffer to byte range
             buffer.align();
             // read the offsets
-            this.R0 = buffer.readInt32();
-            this.R1 = buffer.readInt32();
-            this.R2 = buffer.readInt32();
+            this.R0 = buffer.readInt32(true);
+            this.R1 = buffer.readInt32(true);
+            this.R2 = buffer.readInt32(true);
             break;
           default:
             throw new XnbError(`Invalid Blocktype Found: ${this.block_type}`);
-            break;
         }
       }
 
@@ -555,22 +555,15 @@ class Lzx {
   }
 
   /**
-     * Reads in code lengths for symbols first to last in the given table
-     * The code lengths are stored in their own special LZX way.
-     * @public
-     * @method readLengths
-     * @param buffer
-     * @param table
-     * @param first
-     * @param last
-     * @returns
-     */
+   * Reads in code lengths for symbols first to last in the given table
+   * The code lengths are stored in their own special LZX way. 
+   */
   readLengths(
-    buffer: BufferReader,
-    table: Array<any>,
+    buffer: LzxBitReader,
+    table: number[],
     first: number,
     last: number,
-  ): Array<any> {
+  ): number[] {
     // read in the 4-bit pre-tree deltas
     for (let i = 0; i < 20; i++) {
       this.pretree_len[i] = buffer.readLZXBits(4);
@@ -762,7 +755,7 @@ class Lzx {
      * @returns
      */
   readHuffSymbol(
-    buffer: BufferReader,
+    buffer: LzxBitReader,
     table: number[],
     length: number[],
     symbols: number,
@@ -786,7 +779,7 @@ class Lzx {
     }
 
     // seek past this many bits
-    buffer.bitPosition += length[i];
+    buffer.bitOffset += length[i];
 
     // return the symbol
     return i;
