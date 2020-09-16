@@ -1,30 +1,23 @@
-// @deno-types="./fast-png.d.ts"
-import * as png from "https://cdn.skypack.dev/fast-png";
 import { exists } from "https://deno.land/std@0.67.0/fs/exists.ts";
 import { readJson } from "https://deno.land/std@0.67.0/fs/read_json.ts";
+import { writeJson } from "https://deno.land/std@0.67.0/fs/write_json.ts";
 import * as path from "https://deno.land/std@0.67.0/path/mod.ts";
+import { getReader, Parsed } from "../mod.ts";
 import XnbError from "./error.ts";
 import log from "./log.ts";
-import { XnbJson } from "./pack.ts";
-import { BmFont } from "./xnb/readers/bm-font.ts";
-import { Effect } from "./xnb/readers/effect.ts";
-import { TBin } from "./xnb/readers/tbin.ts";
-import { Texture2D } from "./xnb/readers/texture2d.ts";
+import { Reader, ReaderWithExports } from "./types.ts";
+import { containsKey, isObject } from "./util.ts";
 
-// I think this is what the original was trying to do, but I'm not sure.
-function getNestedValue(obj: Record<string, any>, keys: string[]): any | null {
-  var val = obj;
-  for (const key of keys) {
-    val = val[key];
-    if (val === undefined) return null;
-  }
-  return val;
+function hasExports<T, E>(
+  reader: Reader<T>,
+): reader is ReaderWithExports<T, E> {
+  return typeof (reader as ReaderWithExports<T, E>).export !== "undefined";
 }
 
 /** Saves a parsed XNB file and its exports. */
 export async function saveXnb(
   filename: string,
-  xnbObject: { content: Record<string, any> },
+  xnb: Parsed<unknown>,
 ) {
   // get the dirname for the file
   const dirname = path.dirname(filename);
@@ -36,218 +29,69 @@ export async function saveXnb(
     await Deno.mkdir(dirname, { recursive: true });
   }
 
-  // ensure we have content field
-  if (!xnbObject.hasOwnProperty("content")) {
-    throw new XnbError("Invalid object!");
-  }
+  const reader = getReader(xnb.readers[0].type);
 
-  // pull reference of content out of data
-  const content = xnbObject.content;
-  // search the content object for exports to process
-  const found = search(content, "export");
-
-  // if we found data to export
-  if (found) {
-    // get the key path from found
-    const keyPath = found.path;
-    // get the exported buffer from found
-    const exported = found.value as Texture2D | Effect | TBin | BmFont;
-
-    if (
-      exported == undefined || exported.type == undefined ||
-      exported.data == undefined
-    ) {
-      throw new XnbError("Invalid file export!");
-    }
-
-    // log that we are exporting additional data
-    log.info(`Exporting ${exported.type} ...`);
-
-    // set buffer by default
-    let buffer = exported.data;
-    // set extension by default
-    let extension = "bin";
-
-    // resolve found content based on key path if empty then its just content
-    const foundContent = keyPath.length === 0
-      ? content
-      : getNestedValue(content, keyPath);
-
-    // switch over possible export types
-    // TODO: make this a litle cleaner possibly with its own function
-    switch (exported.type) {
-      // Texture2D to PNG
-      case "Texture2D":
-        buffer = png.encode(exported);
-
-        extension = "png";
-        break;
-
-      // Compiled Effects
-
-      case "Effect":
-        extension = "cso";
-        break;
-
-      // TODO: TBin to tbin or tmx
-
-      case "TBin":
-        extension = "tbin";
-        break;
-
-      // BmFont Xml
-
-      case "BmFont":
-        extension = "xml";
-        break;
-    }
-
-    // output file name
-    const outputFilename = path.resolve(dirname, `${basename}.${extension}`);
-
-    // save the file
-    if (buffer instanceof Uint8Array) {
-      await Deno.writeFile(outputFilename, buffer);
-    } else if (typeof buffer === "string") {
-      await Deno.writeTextFile(outputFilename, buffer);
-    } else {
-      throw new XnbError(
-        `Invalid output format '${
-          typeof buffer === "object"
-            ? (buffer as object).constructor.name
-            : typeof buffer
-        }'`,
-      );
-    }
-
-    // set the exported value to the path
-    foundContent.export = path.basename(outputFilename);
+  if (hasExports(reader)) {
+    xnb.content = reader.export(xnb.content, (data, extname) => {
+      const filename = `${basename}.${extname}`;
+      log.info(`Exporting ${filename}...`);
+      Deno.writeFileSync(path.resolve(dirname, filename), data);
+      return filename;
+    });
   }
 
   // save the XNB object as JSON
-  await Deno.writeTextFile(filename, JSON.stringify(xnbObject, null, 4));
+  await writeJson(filename, xnb, { spaces: 4 });
 
   // successfully exported file(s)
   return true;
 }
 
 /** Reads an unpacked XNB file and its exports into parsed XNB. */
-export async function readXnb(filename: string): Promise<XnbJson> {
+export async function readXnb(filename: string): Promise<Parsed<unknown>> {
   // get the directory name
   const dirname = path.dirname(filename);
 
   // get the JSON for the contents
-  const json = await readJson(filename) as XnbJson;
+  const json = await readJson(filename);
 
-  if (typeof json !== "object") {
-    throw new XnbError(`${filename} contains an array instead of an object.`);
+  if (!checkParsed(json)) {
+    throw new XnbError(`Invalid XNB json ${filename}`);
   }
 
-  // need content
-  if (!json.hasOwnProperty("content")) {
-    throw new XnbError(`${filename} does not have "content".`);
-  }
+  const reader = getReader(json.readers[0].type);
 
-  // pull reference of content out of data
-  const content = json.content;
-  // search the content object for exports to process
-  const found = search(content, "export");
-
-  // if we found data to export
-  if (found) {
-    // get the key path from found
-    const keyPath = found.path;
-    // get the exported buffer from found
-    const exported = found.value;
-
-    if (exported == undefined) {
-      throw new XnbError("Invalid file export!");
-    }
-
-    // form the path for the exported file
-    const exportedPath = path.join(dirname, exported);
-    // load in the exported file
-    const exportedFile = await Deno.readFile(exportedPath);
-    // get the extension of the file
-    const ext = path.extname(exportedPath);
-
-    // switch over supported file extension types
-    switch (ext) {
-      // Texture2D to PNG
-      case ".png":
-        // get the png data
-        const decoded = png.decode(exportedFile);
-        // change the exported contents
-        const data = {
-          data: decoded.data,
-          width: decoded.width,
-          height: decoded.height,
-        };
-
-        if (keyPath.length) {
-          getNestedValue(json.content, keyPath).export = data;
-        } else {
-          json.content.export = data;
-        }
-        break;
-
-      // Compiled Effects
-
-      case ".cso":
-        json.content = {
-          type: "Effect",
-          data: exportedFile,
-        };
-        break;
-
-      // TBin Map
-
-      case ".tbin":
-        json.content = {
-          type: "TBin",
-          data: exportedFile,
-        };
-        break;
-
-      // BmFont Xml
-
-      case ".xml":
-        json.content = {
-          type: "BmFont",
-          data: new TextDecoder().decode(exportedFile),
-        };
-        break;
-    }
+  if (hasExports(reader)) {
+    json.content = reader.import(
+      json.content,
+      (filename) => Deno.readFileSync(path.resolve(dirname, filename)),
+    );
   }
 
   // return the JSON
   return json;
 }
 
-/** Search an object for a given key. */
-function search(
-  object: Record<string, any>,
-  key: string,
-  path: string[] = [],
-): { path: string[]; value: any } | null {
-  // ensure object is defined and is an object
-  if (!object || typeof object != "object") {
-    return null;
-  }
-
-  // if property exists then return it
-  if (object.hasOwnProperty(key)) {
-    return { path, value: object[key] };
-  }
-
-  // search the objects for keys
-  for (let [k, v] of Object.entries(object)) {
-    if (typeof v == "object") {
-      path.push(k);
-      return search(v, key, path);
-    }
-  }
-
-  // didn't find anything
-  return null;
+function checkParsed(xnb: unknown): xnb is Parsed<unknown> {
+  return isObject(xnb) &&
+    containsKey(xnb, "header") &&
+    isObject(xnb.header) &&
+    containsKey(xnb.header, "target") &&
+    typeof xnb.header.target === "string" &&
+    containsKey(xnb.header, "formatVersion") &&
+    typeof xnb.header.formatVersion === "number" &&
+    containsKey(xnb.header, "hidef") &&
+    typeof xnb.header.hidef === "boolean" &&
+    containsKey(xnb.header, "compressed") &&
+    typeof xnb.header.compressed === "boolean" &&
+    containsKey(xnb, "readers") &&
+    xnb.readers instanceof Array &&
+    xnb.readers.every((reader) =>
+      isObject(reader) &&
+      containsKey(reader, "type") &&
+      typeof reader.type === "string" &&
+      containsKey(reader, "version") &&
+      typeof reader.version === "number"
+    ) &&
+    "content" in xnb;
 }

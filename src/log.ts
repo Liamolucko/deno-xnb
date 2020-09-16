@@ -18,7 +18,7 @@ export default {
    * Displays an info message
    * @param message Message to display to the console as info.
    */
-  info(message: string = "") {
+  info(message = "") {
     if (this.showInfo) {
       console.log(bold(blue("[INFO] ")) + message);
     }
@@ -28,7 +28,7 @@ export default {
    * Displays a debug message
    * @param message Message to display to the console if debug is enabled.
    */
-  debug(message: string = "") {
+  debug(message = "") {
     if (this.showDebug) {
       console.log(bold(magenta("[DEBUG] ")) + message);
     }
@@ -38,7 +38,7 @@ export default {
    * Displays a warning message
    * @param message Message to display to the console as a warning.
    */
-  warn(message: string = "") {
+  warn(message = "") {
     if (this.showWarnings) {
       console.log(bold(yellow("[WARN] ")) + message);
     }
@@ -48,7 +48,7 @@ export default {
    * Displays an error message
    * @param message Message to display to the console as an error.
    */
-  error(message: string = "") {
+  error(message = "") {
     if (this.showErrors) {
       console.log(bold(red("[ERROR] ")) + message);
     }
@@ -57,9 +57,9 @@ export default {
   /** Displays a binary message */
   b(
     n: number,
-    size: number = 8,
-    sliceBegin: number = -1,
-    sliceEnd: number = -1,
+    size = 8,
+    sliceBegin = -1,
+    sliceEnd = -1,
   ): string {
     var z = "";
     while (z.length < size) {

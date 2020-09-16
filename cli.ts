@@ -1,20 +1,20 @@
-import { bold, green, red } from "https://deno.land/std@0.67.0/fmt/colors.ts";
-import { exists } from "https://deno.land/std@0.67.0/fs/exists.ts";
-import { walk } from "https://deno.land/std@0.67.0/fs/walk.ts";
-import * as path from "https://deno.land/std@0.67.0/path/mod.ts";
-import { Command } from "https://deno.land/x/cliffy@v0.13.0/command/mod.ts";
+import { bold, green, red } from "https://deno.land/std@0.69.0/fmt/colors.ts";
+import { exists } from "https://deno.land/std@0.69.0/fs/exists.ts";
+import { walk } from "https://deno.land/std@0.69.0/fs/walk.ts";
+import * as path from "https://deno.land/std@0.69.0/path/mod.ts";
+import { Command } from "https://deno.land/x/cliffy@v0.14.1/command/mod.ts";
 import * as xnb from "./mod.ts";
 import { readXnb, saveXnb } from "./src/export.ts";
 import log from "./src/log.ts";
 
 // used for displaying the tally of success and fail
 let successes: string[] = [];
-let fails: Array<{ file: string; error?: any }> = [];
+let fails: Array<{ file: string; error?: unknown }> = [];
 
 // create the program and set version number
 const cmd = new Command<{ debug: boolean; onlyErrors: boolean }>()
   .name("xnbcli")
-  .version("1.0.0")
+  .version("2.0.0")
   .description("Packs and unpacks XNB files");
 
 cmd.option(
@@ -123,7 +123,7 @@ async function packFile(input: string, output: string) {
 async function main(
   input: string,
   output: string,
-  handler: (input: string, output: string) => any,
+  handler: (input: string, output: string) => unknown,
   options: { debug: boolean; onlyErrors: boolean },
 ) {
   // Configure logger
@@ -131,6 +131,10 @@ async function main(
   log.showWarnings = !options.onlyErrors;
   log.showErrors = true;
   log.showDebug = options.debug;
+
+  // Expand paths
+  input = path.resolve(input);
+  output = path.resolve(output);
 
   // if this isn't a directory then just run the function
   if (!(await Deno.stat(input)).isDirectory) {
@@ -196,11 +200,11 @@ async function main(
   console.log(`${bold(red("Fail"))} ${fails.length}`);
 
   // This is pretty useful for debugging so I won't remove it just yet.
-  // Deno.writeTextFileSync(
-  //   "./errors.md",
-  //   fails.map((fail) =>
-  //     `- **${fail.file}**` +
-  //     (typeof fail.error === "undefined" ? "" : `: ${fail.error}`)
-  //   ).join("\n"),
-  // );
-}
+//   Deno.writeTextFileSync(
+//     "./errors.md",
+//     fails.map((fail) =>
+//       `- **${fail.file}**` +
+//       (typeof fail.error === "undefined" ? "" : `: ${fail.error}`)
+//     ).join("\n"),
+//   );
+// }

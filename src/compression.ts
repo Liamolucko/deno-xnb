@@ -1,15 +1,15 @@
-import { BufferReader } from "./buffers.ts";
+import { BinaryReader, LzxBitReader } from "./binary.ts";
 import log from "./log.ts";
 import Lzx from "./lzx.ts";
 import XnbError from "./error.ts";
 
 /** 
  * Decompress a certain amount of bytes.
- * @param buffer The `BufferReader` from which to read.
+ * @param buffer The `BinaryReader` from which to read.
  * @param compressedTodo The number of bytes to decompress.
  */
 export function decompress(
-  buffer: BufferReader,
+  buffer: LzxBitReader,
   compressedTodo: number,
 ): Uint8Array {
   // current index into the buffer
@@ -40,7 +40,7 @@ export function decompress(
       pos += 5;
     } else {
       // rewind the buffer
-      buffer.seek(-1);
+      buffer.bytePosition -= 1;
       // read in the block size
       blockSize = buffer.readLZXInt16();
       // set the frame size
