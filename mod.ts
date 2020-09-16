@@ -86,10 +86,10 @@ export function getReader(
 
 /**
  * Registers custom readers to use when parsing XNB.
- * @param readers The readers to register.
+ * @param newReaders The readers to register.
  */
-export function register(...readers: ReaderConstructor<unknown>[]) {
-  readers.push(...readers);
+export function register(...newReaders: ReaderConstructor<unknown>[]) {
+  readers.push(...newReaders);
 }
 
 // constants

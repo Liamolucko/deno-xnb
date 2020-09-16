@@ -1,4 +1,4 @@
-// @deno-types="./fast-png.d.ts"
+// @deno-types="https://gist.github.com/Liamolucko/b318e25e2cafff7c5eb22ea415ac1d11/raw/939a2732ac2df832e576847590ff03352633ca7b/fast-png.d.ts"
 import * as png from "https://cdn.skypack.dev/fast-png@5.0.2";
 import * as dxt from "https://denopkg.com/Liamolucko/deno-dxt/mod.ts";
 import {
