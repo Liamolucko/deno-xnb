@@ -1,5 +1,5 @@
 // @deno-types="./fast-png.d.ts"
-import * as png from "https://cdn.skypack.dev/fast-png";
+import * as png from "https://cdn.skypack.dev/fast-png@5.0.2";
 import * as dxt from "https://denopkg.com/Liamolucko/deno-dxt/mod.ts";
 import {
   BinaryReader,

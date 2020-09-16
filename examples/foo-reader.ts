@@ -37,3 +37,18 @@ const FooReader = {
 };
 
 xnb.register(FooReader);
+
+const foo = xnb.pack({
+  header: {
+    target: "w",
+    hidef: true,
+    formatVersion: 5,
+    compressed: true,
+  },
+  readers: [{
+    type: "Foo.FooReader",
+    version: 0,
+  }],
+  content: "Foo",
+});
+console.log(xnb.unpack(foo)) // Foo

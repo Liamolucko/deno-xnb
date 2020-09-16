@@ -98,7 +98,7 @@ const COMPRESSED_LZ4_MASK = 0x40;
 const COMPRESSED_LZX_MASK = 0x80;
 const XNB_COMPRESSED_PROLOGUE_SIZE = 14;
 
-export interface Parsed {
+export interface Parsed<T> {
   header: {
     target: string;
     formatVersion: number;
@@ -109,14 +109,17 @@ export interface Parsed {
     type: string;
     version: number;
   }[];
-  content: unknown;
+  content: T;
 }
 
 /**
   * Unpacks an XNB file.
   * @param file The XNB file you want to load.
   */
-export function unpack(file: Uint8Array): Parsed {
+export function unpack<T>(
+  file: Uint8Array,
+  expect?: Reader<T>,
+): typeof expect extends undefined ? Parsed<unknown> : Parsed<T> {
   // create a new instance of reader (use LzxBitReader internally)
   const buffer = new LzxBitReader(file);
 
@@ -150,7 +153,6 @@ export function unpack(file: Uint8Array): Parsed {
       const compressedTodo = fileSize - XNB_COMPRESSED_PROLOGUE_SIZE;
       // decompress the buffer based on the file size
       const decompressed = presser.decompress(buffer, compressedTodo);
-      Deno.writeFileSync("./test.bin", decompressed);
       // copy the decompressed buffer into the file buffer
       buffer.copyFrom(
         decompressed,
@@ -221,7 +223,9 @@ export function unpack(file: Uint8Array): Parsed {
   // create content reader from the readers loaded
   const content = new ReaderManager(loadedReaders);
   // read the content in
-  const result = content.readFrom(buffer);
+  // I had to assert non-null here because expect _is_ optional,
+  // typescript just got confused because of the overloads.
+  const result = content.readFrom(buffer, expect);
 
   // we loaded the XNB file successfully
   log.info("Successfuly read XNB file!");
@@ -235,12 +239,12 @@ export function unpack(file: Uint8Array): Parsed {
       compressed,
     },
     readers,
-    content: result!,
+    content: result,
   };
 }
 
 /** Converts parsed XNB into an XNB buffer. */
-export function pack(json: Parsed) {
+export function pack(json: Parsed<unknown>) {
   // the output buffer for this file
   const buffer = new BinaryWriter();
 

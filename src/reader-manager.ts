@@ -3,6 +3,13 @@ import XnbError from "./error.ts";
 import log from "./log.ts";
 import { Reader, Type } from "./types.ts";
 
+function readerIs<T>(
+  reader: Reader<unknown>,
+  other: Reader<T>,
+): reader is Reader<T> {
+  return reader.type.equals(other.type);
+}
+
 /** Class used to read the XNB types using the readers */
 export default class ReaderManager {
   /**
@@ -16,23 +23,24 @@ export default class ReaderManager {
    * @param buffer The buffer to read from.
    * @param expect Expected reader to resolve, throws if incorrect. 
    */
-  readFrom<T>(buffer: BinaryReader): unknown;
-  readFrom<T>(buffer: BinaryReader, expect: Reader<T>): T;
-  readFrom<T>(buffer: BinaryReader, expect?: Reader<T>) {
+  readFrom<T>(
+    buffer: BinaryReader,
+    expect?: Reader<T>,
+  ): typeof expect extends undefined ? unknown : T {
     // read the index of which reader to use
     let index = buffer.read7BitEncodedNumber() - 1;
     if (index >= this.readers.length) {
       throw new XnbError(`Invalid reader index ${index}`);
     }
     const reader = this.readers[index];
-    if (typeof expect !== "undefined" && !reader.type.equals(expect.type)) {
+    if (typeof expect !== "undefined" && !readerIs(reader, expect)) {
       throw new XnbError(
-        `Expected reader ${expect.type.name}, found ${reader.type.name}`,
+        `Expected reader ${expect.type.toString()}, found ${reader.type.toString()}`,
       );
     }
 
     // read the buffer using the selected reader
-    return reader.readFrom(buffer, this);
+    return reader.readFrom(buffer, this) as T;
   }
 
   /** Writes the XNB file contents. */

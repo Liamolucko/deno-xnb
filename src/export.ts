@@ -17,7 +17,7 @@ function hasExports<T, E>(
 /** Saves a parsed XNB file and its exports. */
 export async function saveXnb(
   filename: string,
-  xnb: Parsed,
+  xnb: Parsed<unknown>,
 ) {
   // get the dirname for the file
   const dirname = path.dirname(filename);
@@ -48,7 +48,7 @@ export async function saveXnb(
 }
 
 /** Reads an unpacked XNB file and its exports into parsed XNB. */
-export async function readXnb(filename: string): Promise<Parsed> {
+export async function readXnb(filename: string): Promise<Parsed<unknown>> {
   // get the directory name
   const dirname = path.dirname(filename);
 
@@ -72,7 +72,7 @@ export async function readXnb(filename: string): Promise<Parsed> {
   return json;
 }
 
-function checkParsed(xnb: unknown): xnb is Parsed {
+function checkParsed(xnb: unknown): xnb is Parsed<unknown> {
   return isObject(xnb) &&
     containsKey(xnb, "header") &&
     isObject(xnb.header) &&
