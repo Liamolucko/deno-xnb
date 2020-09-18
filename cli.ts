@@ -163,36 +163,34 @@ async function main(
     output = input;
   }
 
-  for await (const entry of walk(input)) {
-    // when we encounter a file
-    if (entry.isFile) {
-      // get the extension
-      const ext = path.extname(entry.name).toLocaleLowerCase();
-      // skip files that aren't JSON or XNB
-      if (ext != ".json" && ext != ".xnb") {
-        continue;
-      }
+  for await (
+    const entry of walk(input, {
+      includeDirs: false,
+      exts: ["json", "xnb"],
+    })
+  ) {
+    // get the extension
+    const ext = path.extname(entry.name).toLocaleLowerCase();
 
-      // swap the input base directory with the base output directory for our target directory
-      const target = entry.path.replace(input, output);
-      // get the source path
-      const inputFile = entry.path;
-      // get the target ext
-      const targetExt = ext == ".xnb" ? ".json" : ".xnb";
-      // form the output file path
-      const outputFile = path.join(
-        path.dirname(target),
-        path.basename(entry.name, ext) + targetExt,
-      );
+    // swap the input base directory with the base output directory for our target directory
+    const target = entry.path.replace(input, output);
+    // get the source path
+    const inputFile = entry.path;
+    // get the target ext
+    const targetExt = ext == ".xnb" ? ".json" : ".xnb";
+    // form the output file path
+    const outputFile = path.join(
+      path.dirname(target),
+      path.basename(entry.name, ext) + targetExt,
+    );
 
-      // ensure the path to the output file exists
-      if (!await exists(path.dirname(inputFile))) {
-        await Deno.mkdir(outputFile, { recursive: true });
-      }
-
-      // run the function
-      await handler(inputFile, outputFile);
+    // ensure the path to the output file exists
+    if (!await exists(path.dirname(inputFile))) {
+      await Deno.mkdir(outputFile, { recursive: true });
     }
+
+    // run the function
+    await handler(inputFile, outputFile);
   }
 
   // give a final analysis of the files
