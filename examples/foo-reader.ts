@@ -51,4 +51,4 @@ const foo = xnb.pack({
   }],
   content: "Foo",
 });
-console.log(xnb.unpack(foo).content) // Foo
+console.log(xnb.unpack(foo).content); // Foo
