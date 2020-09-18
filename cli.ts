@@ -200,11 +200,11 @@ async function main(
   console.log(`${bold(red("Fail"))} ${fails.length}`);
 
   // This is pretty useful for debugging so I won't remove it just yet.
-//   Deno.writeTextFileSync(
-//     "./errors.md",
-//     fails.map((fail) =>
-//       `- **${fail.file}**` +
-//       (typeof fail.error === "undefined" ? "" : `: ${fail.error}`)
-//     ).join("\n"),
-//   );
-// }
+  // Deno.writeTextFileSync(
+  //   "./errors.md",
+  //   fails.map((fail) =>
+  //     `- **${fail.file}**` +
+  //     (typeof fail.error === "undefined" ? "" : `: ${fail.error}`)
+  //   ).join("\n"),
+  // );
+}
