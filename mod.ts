@@ -422,10 +422,5 @@ function parseHeader(buffer: BinaryReader) {
 }
 
 // Re-export some stuff
-export {
-  Reader,
-  XnbError,
-  BinaryReader,
-  BinaryWriter,
-  ReaderManager,
-};
+export { BinaryReader, BinaryWriter, ReaderManager, XnbError };
+export type { Reader };
