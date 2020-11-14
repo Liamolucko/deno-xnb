@@ -12,17 +12,27 @@ async function testCli(...options: string[]) {
     ],
     stdout: "piped",
     cwd: path.dirname(path.fromFileUrl(import.meta.url)),
+    env: {
+      "NO_COLOR": "1",
+    },
   });
 
   const output = new TextDecoder().decode(await process.output());
 
+  const errors = Array.from(
+    output.matchAll(/\[ERROR\]((?:.|\n)+?)(?=\n\[|$)/g),
+  ).map((err) => err[0]);
+
   if (!(await process.status()).success) {
     throw new Error("CLI failed");
-  } else if (output.includes("[ERROR]")) {
+  } else if (
+    errors.filter((err) =>
+      // These errors are expected
+      !err.split("\n")[1].startsWith("XnbError: Invalid reader type")
+    ).length > 0
+  ) {
     throw new Error(
-      `CLI logged error(s):\n    ${
-        Array.from(output.matchAll(/\[ERROR\](.+)$/gm)).join("\n    ")
-      }`,
+      `CLI logged error(s):\n    ${errors.join("\n    ")}`,
     );
   }
 
