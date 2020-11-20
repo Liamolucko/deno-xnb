@@ -165,7 +165,7 @@ export function unpack<T>(
     } // decompress LZ4 format
     else if (compressionType == COMPRESSED_LZ4_MASK) {
       // allocate buffer for LZ4 decode
-      let trimmed = buffer.buffer.slice(XNB_COMPRESSED_PROLOGUE_SIZE);
+      const trimmed = buffer.buffer.slice(XNB_COMPRESSED_PROLOGUE_SIZE);
       // decode the trimmed buffer into decompressed buffer
       const decompressed = lz4.decompress(trimmed);
       // copy the decompressed buffer into our buffer
@@ -185,7 +185,7 @@ export function unpack<T>(
   // NOTE: assuming the buffer is now decompressed
 
   // get the 7-bit value for readers
-  let count = buffer.read7BitEncodedNumber();
+  const count = buffer.read7BitEncodedNumber();
   // log how many readers there are
   log.debug(`Readers: ${count}`);
 
@@ -279,7 +279,7 @@ export function pack(json: Parsed<unknown>) {
 
   // loop over the readers and load the types
   const readers = [];
-  for (let reader of json.readers) {
+  for (const reader of json.readers) {
     readers.push(getReader(reader.type)); // simplify the type then get the reader of it
     StringReader.writeTo(buffer, reader.type);
     buffer.writeUint32(reader.version, true);

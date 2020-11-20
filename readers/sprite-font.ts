@@ -1,4 +1,4 @@
-import { Type, SingletonReader } from "../src/types.ts";
+import { SingletonReader, Type } from "../src/types.ts";
 import CharReader from "./char.ts";
 import Int32Reader from "./int32.ts";
 import ListReader from "./list.ts";

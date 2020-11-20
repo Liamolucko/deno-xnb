@@ -1,4 +1,4 @@
-import { Type, BinaryReader, BinaryWriter } from "../mod.ts";
+import { BinaryReader, BinaryWriter, Type } from "../mod.ts";
 
 const DoubleReader = {
   /** Reads Double from buffer. */

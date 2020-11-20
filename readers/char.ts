@@ -8,7 +8,7 @@ function getCharSize(byte: number): number {
 const CharReader = {
   /** Reads Char from the buffer. */
   readFrom(buffer: BinaryReader): string {
-    let charSize = getCharSize(buffer.peekByte());
+    const charSize = getCharSize(buffer.peekByte());
     return new TextDecoder().decode(buffer.readBytes(charSize));
   },
 

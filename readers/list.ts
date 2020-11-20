@@ -34,7 +34,7 @@ class ListReader<T> implements Reader<T[]> {
     resolver: ReaderManager,
   ) {
     UInt32Reader.writeTo(buffer, content.length);
-    for (let i in content) {
+    for (const i in content) {
       if (this.reader.isPolymorphic) resolver.writeIndex(buffer, this.reader);
       this.reader.writeTo(buffer, content[i], resolver);
     }

@@ -10,9 +10,9 @@ export interface Vector3 {
 export const Vector3Reader = {
   /** Reads Vector3 from buffer. */
   readFrom(buffer: BinaryReader): Vector3 {
-    let x = SingleReader.readFrom(buffer);
-    let y = SingleReader.readFrom(buffer);
-    let z = SingleReader.readFrom(buffer);
+    const x = SingleReader.readFrom(buffer);
+    const y = SingleReader.readFrom(buffer);
+    const z = SingleReader.readFrom(buffer);
 
     return { x, y, z };
   },

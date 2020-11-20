@@ -414,9 +414,9 @@ export class LzxBitReader extends BinaryReader {
    */
   peekLZXBits(bits: number): number {
     // get the current bit position to store
-    let bitPosition = this.bitOffset;
+    const bitPosition = this.bitOffset;
     // get the current byte position to store
-    let bytePosition = this.bytePosition;
+    const bytePosition = this.bytePosition;
 
     // read the bits like normal
     const read = this.readLZXBits(bits);

@@ -4,7 +4,7 @@ import Int32Reader from "./int32.ts";
 const TBinReader = {
   readFrom(buffer: BinaryReader) {
     // read in the size of the data block
-    let size = Int32Reader.readFrom(buffer);
+    const size = Int32Reader.readFrom(buffer);
 
     // return the data
     return buffer.readBytes(size);

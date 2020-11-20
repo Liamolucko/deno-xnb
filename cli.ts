@@ -8,8 +8,8 @@ import { readXnb, saveXnb } from "./src/export.ts";
 import log from "./src/log.ts";
 
 // used for displaying the tally of success and fail
-let successes: string[] = [];
-let fails: Array<{ file: string; error?: unknown }> = [];
+const successes: string[] = [];
+const fails: Array<{ file: string; error?: unknown }> = [];
 
 // create the program and set version number
 const cmd = new Command<{ debug: boolean; onlyErrors: boolean }>()

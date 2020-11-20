@@ -9,8 +9,8 @@ export interface Vector2 {
 const Vector2Reader = {
   /** Reads Vector2 from buffer. */
   readFrom(buffer: BinaryReader): Vector2 {
-    let x = SingleReader.readFrom(buffer);
-    let y = SingleReader.readFrom(buffer);
+    const x = SingleReader.readFrom(buffer);
+    const y = SingleReader.readFrom(buffer);
 
     return { x, y };
   },

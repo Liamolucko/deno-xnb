@@ -28,7 +28,7 @@ export default class ReaderManager {
     expect?: Reader<T>,
   ): typeof expect extends undefined ? unknown : T {
     // read the index of which reader to use
-    let index = buffer.read7BitEncodedNumber() - 1;
+    const index = buffer.read7BitEncodedNumber() - 1;
     if (index >= this.readers.length) {
       throw new XnbError(`Invalid reader index ${index}`);
     }

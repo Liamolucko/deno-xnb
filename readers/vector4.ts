@@ -11,10 +11,10 @@ export interface Vector4 {
 const Vector4Reader = {
   /** Reads Vector4 from buffer. */
   readFrom(buffer: BinaryReader): Vector4 {
-    let x = SingleReader.readFrom(buffer);
-    let y = SingleReader.readFrom(buffer);
-    let z = SingleReader.readFrom(buffer);
-    let w = SingleReader.readFrom(buffer);
+    const x = SingleReader.readFrom(buffer);
+    const y = SingleReader.readFrom(buffer);
+    const z = SingleReader.readFrom(buffer);
+    const w = SingleReader.readFrom(buffer);
 
     return { x, y, z, w };
   },

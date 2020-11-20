@@ -22,14 +22,14 @@ class ArrayReader<T> implements Reader<T[]> {
   /** Reads Array from buffer. */
   readFrom(buffer: BinaryReader, resolver: ReaderManager): T[] {
     // read the number of elements in the array
-    let size = UInt32Reader.readFrom(buffer);
+    const size = UInt32Reader.readFrom(buffer);
     // create local array
-    let array = [];
+    const array = [];
 
     // loop size number of times for the array elements
     for (let i = 0; i < size; i++) {
       // get value from buffer
-      let value = this.reader.isPolymorphic
+      const value = this.reader.isPolymorphic
         ? resolver.readFrom(buffer, this.reader)
         : this.reader.readFrom(buffer, resolver);
       // push into local array
@@ -50,7 +50,7 @@ class ArrayReader<T> implements Reader<T[]> {
     UInt32Reader.writeTo(buffer, content.length);
 
     // loop over array to write array contents
-    for (let item of content) {
+    for (const item of content) {
       if (this.reader.isPolymorphic) resolver.writeIndex(buffer, this.reader);
       this.reader.writeTo(buffer, item, resolver);
     }
